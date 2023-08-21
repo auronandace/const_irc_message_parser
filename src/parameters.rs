@@ -102,7 +102,7 @@ impl<'msg> Parameters<'msg> {
         let param = if last_param {
             rest
         } else {
-            let (p, _) = rest.split_at(param_end);
+            let (p, _) = rest.split_at(if self.amount == 1 {param_end+1} else {param_end});
             p
         };
         if param[0] == b':' {
@@ -153,6 +153,11 @@ mod const_tests {
         let first = first_param.as_bytes();
         assert!(first.is_empty());
         assert!(first.len() == 0);
+        let params = Parameters{amount: 1, content: ContentType::new(b"#chat")};
+        let first_param = params.extract_first();
+        let first = first_param.as_bytes();
+        assert!(first.len() == 5);
+        assert!(is_identical(first, b"#chat"));
     }
     #[test]
     const fn get_last() {

@@ -1,4 +1,18 @@
 //! Methods for parsing and extracting information from [`Source`].
+//!
+//! ## Purpose
+//!
+//! [`Source`] is part of the [IRC Message Protocol].
+//! The [`Source`] occurs after the [`Tags`](crate::Tags) and before the [`Command`](crate::Command).
+//! Since [`Tags`](crate::Tags) are optional it is possible for the [`Source`] to be the first
+//! component of an [`IrcMsg`](crate::IrcMsg).
+//! It identifies the [`Origin`] of where the message was generated.
+//! IRC servers are always responsible for generating the [`Source`] on behalf of the client
+//! and can choose whether or not to send it with an [`IrcMsg`](crate::IrcMsg).
+//! IRC clients must never include the [`Source`] when sending an [`IrcMsg`](crate::IrcMsg) but must
+//! be able to process every [`IrcMsg`](crate::IrcMsg) with or without [`Source`].
+//!
+//! [IRC Message Protocol]: <https://modern.ircdocs.horse/#source>
 
 use crate::ContentType;
 

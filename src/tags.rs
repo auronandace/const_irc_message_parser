@@ -1,4 +1,16 @@
 //! Methods for parsing and extracting information from [`Tags`].
+//!
+//! ## Purpose
+//!
+//! [`Tags`] are an optional extension to the IRC message format defined in the [Message Tag Specification].
+//! They always occur at the start of an [`IrcMsg`](crate::IrcMsg), if present, before the [`Source`](crate::Source).
+//! They are intended to supply extra information about a message in the form of metadata.
+//! The metadata they contain gets used in many optional features.
+//! An IRC server must not include [`Tags`] in an [`IrcMsg`](crate::IrcMsg) sent to an IRC client unless
+//! the client has specifically enabled support via [capability negotiation].
+//!
+//! [Message Tag Specification]: <https://ircv3.net/specs/extensions/message-tags.html>
+//! [capability negotiation]: <https://ircv3.net/specs/extensions/capability-negotiation.html>
 
 /// All the tags of an [`IrcMsg`](crate::IrcMsg).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

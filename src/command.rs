@@ -1,4 +1,22 @@
 //! Method for parsing and extracting a [`Command`].
+//!
+//! ## Purpose
+//!
+//! [`Command`] is part of the [IRC Message Protocol].
+//! It must never be empty.
+//! The [`Command`] occurs after the [`Source`](crate::Source) and before the [`Parameters`](crate::Parameters).
+//! Since both [`Tags`](crate::Tags) and [`Source`](crate::Source) are optional it is possible for [`Command`]
+//! to be the first component in an [`IrcMsg`](crate::IrcMsg).
+//! It can either be a `Named` or a `Numeric` command.
+//! A `Numeric` is a 3 digit string representing a reply or an error to a `Named` command.
+//! Some `Named` commands are only available after successful [capability negotiation].
+//! For such commands an IRC server must never send them to an IRC client if the client doesn't indicate support
+//! through the `CAP` command.
+//! Some commands do not require any [`Parameters`](crate::Parameters) but most do.
+//! The amount of [`Parameters`](crate::Parameters) and what they mean depends on the [`Command`].
+//!
+//! [IRC Message Protocol]: <https://modern.ircdocs.horse/#command>
+//! [capability negotiation]: <https://ircv3.net/specs/extensions/capability-negotiation.html>
 
 /// The command of an [`IrcMsg`](crate::IrcMsg).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

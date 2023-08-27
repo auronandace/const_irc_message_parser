@@ -1,4 +1,15 @@
 //! Methods for parsing and extracting information from [`Parameters`].
+//!
+//! ## Purpose
+//!
+//! [`Parameters`] are part of the [IRC Message Protocol].
+//! If present, they occur at the end of the [`IrcMsg`](crate::IrcMsg) after the [`Command`](crate::Command).
+//! How many there are and what they mean depend on the [`Command`](crate::Command).
+//! IRC servers can send a [`Command`](crate::Command) with more [`Parameters`] than the specification indicates.
+//! IRC clients must be able to accept a [`Command`](crate::Command) and process it even when it contains more
+//! [`Parameters`] than expected.
+//!
+//! [IRC Message Protocol]: <https://modern.ircdocs.horse/#parameters>
 
 use crate::ContentType;
 

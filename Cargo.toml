@@ -2,6 +2,7 @@
 name = "const_irc_message_parser"
 version = "0.2.0"
 edition = "2021"
+rust-version = "1.71" # core::slice::split_at
 license = "ISC"
 description = "A 0 dependency, no_std, const-only parser for the IRC message protocol."
 categories = ["no-std", "no-std::no-alloc", "parser-implementations"]

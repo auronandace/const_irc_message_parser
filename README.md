@@ -11,3 +11,4 @@ Documentation can be found here: https://docs.rs/const_irc_message_parser
 
 ## Acknowledgements
 IRC Message specifications: https://modern.ircdocs.horse
+IRC Message Tags specifications: https://ircv3.net/specs/extensions/message-tags.html

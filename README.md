@@ -10,5 +10,5 @@ I was even able to make all the tests const functions even though it ends up bei
 Documentation can be found here: https://docs.rs/const_irc_message_parser
 
 ## Acknowledgements
-IRC Message specifications: https://modern.ircdocs.horse
-IRC Message Tags specifications: https://ircv3.net/specs/extensions/message-tags.html
+- IRC Message specifications: https://modern.ircdocs.horse
+- IRC Message Tags specifications: https://ircv3.net/specs/extensions/message-tags.html

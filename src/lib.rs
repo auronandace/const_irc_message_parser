@@ -32,6 +32,7 @@ pub mod tags;
 pub mod source;
 pub mod command;
 pub mod parameters;
+pub mod formatting;
 
 /// A single IRC Message created from a slice of bytes.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

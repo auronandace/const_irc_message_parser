@@ -59,6 +59,7 @@ impl<'msg> Command<'msg> {
                     b"003" | // RPL_CREATED
                     b"005" | // RPL_ISUPPORT
                     b"105" | // RPL_REMOTEISUPPORT
+                    b"203" | // RPL_TRACEUNKNOWN
                     b"221" | // RPL_UMODEIS
                     b"251" | // RPL_LUSERCLIENT
                     b"255" | // RPL_LUSERME
@@ -110,6 +111,7 @@ impl<'msg> Command<'msg> {
                     b"731" | // RPL_MONOFFLINE
                     b"732" | // RPL_MONLIST
                     b"733" | // RPL_ENDOFMONLIST
+                    b"759" | // RPL_ETRACEEND
                     b"902" | // ERR_NICKLOCKED
                     b"903" | // RPL_SASLSUCCESS
                     b"904" | // ERR_SASLFAIL
@@ -117,9 +119,17 @@ impl<'msg> Command<'msg> {
                     b"906" | // ERR_SASLABORTED
                     b"907"   // ERR_SASLALREADY
                     => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));},
+                    b"200" | // RPL_TRACELINK
+                    b"201" | // RPL_TRACECONNECTING
+                    b"202" | // RPL_TRACEHANDSHAKE
+                    b"204" | // RPL_TRACEOPERATOR
+                    b"205" | // RPL_TRACEUSER
+                    b"208" | // RPL_TRACENEWTYPE
+                    b"209" | // RPL_TRACECLASS
                     b"252" | // RPL_LUSEROP
                     b"253" | // RPL_LUSERUNKNOWN
                     b"254" | // RPL_LUSERCHANNELS
+                    b"261" | // RPL_TRACELOG
                     b"263" | // RPL_TRYAGAIN
                     b"276" | // RPL_WHOISCERTFP
                     b"301" | // RPL_AWAY
@@ -185,6 +195,7 @@ impl<'msg> Command<'msg> {
                     b"952"   // ERR_SILENCE
                     => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));},
                     b"010" | // RPL_BOUNCE (possibly RPL_REDIR)
+                    b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE/RPL_TRACEPING
                     b"312" | // RPL_WHOISSERVER
                     b"322" | // RPL_LIST
                     b"330" | // RPL_WHOISACCOUNT
@@ -197,13 +208,18 @@ impl<'msg> Command<'msg> {
                     b"900"   // RPL_LOGGEDIN
                     => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));},
                     b"004" | // RPL_MYINFO
+                    b"206" | // RPL_TRACESERVER
+                    b"207" | // RPL_TRACESERVICE
                     b"317" | // RPL_WHOISIDLE
                     b"696"   // ERR_INVALIDMODEPARAM
                     => if params_amount < 5 {return Err(CommandError::MinimumArgsRequired(5, cmd));},
                     b"311" | // RPL_WHOISUSER
                     b"314"   // RPL_WHOWASUSER
                     => if params_amount < 6 {return Err(CommandError::MinimumArgsRequired(6, cmd));},
-                    b"352"   // RPL_WHOREPLY
+                    b"709"   // RPL_ETRACE
+                    => if params_amount < 7 {return Err(CommandError::MinimumArgsRequired(7, cmd));},
+                    b"352" | // RPL_WHOREPLY
+                    b"708"   // RPL_ETRACEFULL
                     => if params_amount < 8 {return Err(CommandError::MinimumArgsRequired(8, cmd));},
                     _ => unhandled = true,
                 }
@@ -228,6 +244,8 @@ impl<'msg> Command<'msg> {
                 b"ACCEPT000000" => return Ok(Self::Named("ACCEPT")),
                 b"SILENCE00000" => return Ok(Self::Named("SILENCE")),
                 b"DIE000000000" => return Ok(Self::Named("DIE")),
+                b"TRACE0000000" => return Ok(Self::Named("TRACE")),
+                b"ETRACE000000" => return Ok(Self::Named("ETRACE")),
                 b"PASS00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("PASS"));},
                 b"NICK00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
@@ -363,6 +381,7 @@ mod const_tests {
         assert!(Command::parse(b"900", 4).is_ok());
         assert!(Command::parse(b"696", 5).is_ok());
         assert!(Command::parse(b"314", 6).is_ok());
+        assert!(Command::parse(b"709", 7).is_ok());
         assert!(Command::parse(b"352", 8).is_ok());
         assert!(Command::parse(b"3027", 1).is_err());
         assert!(Command::parse(b"999", 1).is_err());
@@ -383,6 +402,8 @@ mod const_tests {
         assert!(Command::parse(b"ACCEPT", 0).is_ok());
         assert!(Command::parse(b"SILENCE", 0).is_ok());
         assert!(Command::parse(b"DIE", 0).is_ok());
+        assert!(Command::parse(b"TRACE", 0).is_ok());
+        assert!(Command::parse(b"ETRACE", 0).is_ok());
         assert!(Command::parse(b"PASS", 1).is_ok());
         assert!(Command::parse(b"PASS", 0).is_err());
         assert!(Command::parse(b"NICK", 1).is_ok());

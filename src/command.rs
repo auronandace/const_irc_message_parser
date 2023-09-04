@@ -58,6 +58,7 @@ impl<'msg> Command<'msg> {
                     b"002" | // RPL_YOURHOST
                     b"003" | // RPL_CREATED
                     b"005" | // RPL_ISUPPORT
+                    b"105" | // RPL_REMOTEISUPPORT
                     b"221" | // RPL_UMODEIS
                     b"251" | // RPL_LUSERCLIENT
                     b"255" | // RPL_LUSERME

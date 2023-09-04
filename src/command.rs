@@ -67,6 +67,8 @@ impl<'msg> Command<'msg> {
                     b"259" | // RPL_ADMINEMAIL
                     b"265" | // RPL_LOCALUSERS
                     b"266" | // RPL_GLOBALUSERS
+                    b"281" | // RPL_ACCEPTLIST/RPL_ENDOFGLIST
+                    b"282" | // RPL_ENDOFACCEPT/RPL_JUPELIST
                     b"305" | // RPL_UNAWAY
                     b"306" | // RPL_NOWAWAY
                     b"321" | // RPL_LISTSTART
@@ -86,6 +88,7 @@ impl<'msg> Command<'msg> {
                     b"417" | // ERR_INPUTTOOLONG
                     b"422" | // ERR_NOMOTD
                     b"451" | // ERR_NOTREGISTERED
+                    b"456" | // ERR_ACCEPTFULL
                     b"462" | // ERR_ALREADYREGISTERED
                     b"464" | // ERR_PASSWDMISMATCH
                     b"465" | // ERR_YOUREBANNEDCREEP
@@ -97,6 +100,8 @@ impl<'msg> Command<'msg> {
                     b"502" | // ERR_USERSDONTMATCH
                     b"670" | // RPL_STARTTLS
                     b"691" | // ERR_STARTTLS
+                    b"716" | // RPL_TARGUMODEG
+                    b"717" | // RPL_TARGNOTIFY
                     b"730" | // RPL_MONONLINE
                     b"731" | // RPL_MONOFFLINE
                     b"732" | // RPL_MONLIST
@@ -152,6 +157,8 @@ impl<'msg> Command<'msg> {
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
                     b"442" | // ERR_NOTONCHANNEL
+                    b"457" | // ERR_ACCEPTEXIST
+                    b"458" | // ERR_ACCEPTNOT
                     b"461" | // ERR_NEEDMOREPARAMS
                     b"471" | // ERR_CHANNELISFULL
                     b"472" | // ERR_UNKNOWNMODE
@@ -165,6 +172,7 @@ impl<'msg> Command<'msg> {
                     b"704" | // RPL_HELPSTART
                     b"705" | // RPL_HELPTXT
                     b"706" | // RPL_ENDOFHELP
+                    b"718" | // RPL_UMODEGMSG
                     b"723" | // ERR_NOPRIVS
                     b"901" | // RPL_LOGGEDOUT
                     b"908"   // RPL_SASLMECHS
@@ -210,6 +218,7 @@ impl<'msg> Command<'msg> {
                 b"AWAY00000000" => return Ok(Self::Named("AWAY")),
                 b"LIST00000000" => return Ok(Self::Named("LIST")),
                 b"ACK000000000" => return Ok(Self::Named("ACK")),
+                b"ACCEPT000000" => return Ok(Self::Named("ACCEPT")),
                 b"PASS00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("PASS"));},
                 b"NICK00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
@@ -358,6 +367,7 @@ mod const_tests {
         assert!(Command::parse(b"AWAY", 0).is_ok());
         assert!(Command::parse(b"LIST", 0).is_ok());
         assert!(Command::parse(b"ACK", 0).is_ok());
+        assert!(Command::parse(b"ACCEPT", 0).is_ok());
         assert!(Command::parse(b"PASS", 1).is_ok());
         assert!(Command::parse(b"PASS", 0).is_err());
         assert!(Command::parse(b"NICK", 1).is_ok());

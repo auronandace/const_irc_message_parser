@@ -310,6 +310,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("KICK"));},
                 b"CHGHOST00000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("CHGHOST"));},
+                b"ENCAP0000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
+                                   else {return Ok(Self::Named("ENCAP"));},
                 b"FAIL00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
                                    else {return Ok(Self::Named("FAIL"));},
                 b"WARN00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
@@ -320,6 +322,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("CPRIVMSG"));},
                 b"CNOTICE00000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
                                    else {return Ok(Self::Named("CNOTICE"));},
+                b"SERVER000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
+                                   else {return Ok(Self::Named("SERVER"));},
                 b"USER00000000" => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));}
                                    else {return Ok(Self::Named("USER"));},
                 b"WEBIRC000000" => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));}
@@ -468,6 +472,8 @@ mod const_tests {
         assert!(Command::parse(b"KICK", 0).is_err());
         assert!(Command::parse(b"CHGHOST", 2).is_ok());
         assert!(Command::parse(b"CHGHOST", 0).is_err());
+        assert!(Command::parse(b"ENCAP", 2).is_ok());
+        assert!(Command::parse(b"ENCAP", 0).is_err());
         assert!(Command::parse(b"FAIL", 3).is_ok());
         assert!(Command::parse(b"FAIL", 0).is_err());
         assert!(Command::parse(b"WARN", 3).is_ok());
@@ -478,6 +484,8 @@ mod const_tests {
         assert!(Command::parse(b"CPRIVMSG", 0).is_err());
         assert!(Command::parse(b"CNOTICE", 3).is_ok());
         assert!(Command::parse(b"CNOTICE", 0).is_err());
+        assert!(Command::parse(b"SERVER", 3).is_ok());
+        assert!(Command::parse(b"SERVER", 0).is_err());
         assert!(Command::parse(b"USER", 4).is_ok());
         assert!(Command::parse(b"USER", 0).is_err());
         assert!(Command::parse(b"WEBIRC", 4).is_ok());

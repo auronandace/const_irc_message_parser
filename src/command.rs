@@ -188,6 +188,11 @@ impl<'msg> Command<'msg> {
                     b"704" | // RPL_HELPSTART
                     b"705" | // RPL_HELPTXT
                     b"706" | // RPL_ENDOFHELP
+                    b"710" | // RPL_KNOCK
+                    b"711" | // RPL_KNOCKDLVR
+                    b"712" | // ERR_TOOMANYKNOCK
+                    b"713" | // ERR_CHANOPEN
+                    b"714" | // ERR_KNOCKONCHAN
                     b"718" | // RPL_UMODEGMSG
                     b"723" | // ERR_NOPRIVS
                     b"901" | // RPL_LOGGEDOUT
@@ -298,6 +303,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("MONITOR"));},
                 b"ISON00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("ISON"));},
+                b"KNOCK0000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
+                                   else {return Ok(Self::Named("KNOCK"));},
                 b"OPER00000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("OPER"));},
                 b"INVITE000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
@@ -464,6 +471,8 @@ mod const_tests {
         assert!(Command::parse(b"MONITOR", 0).is_err());
         assert!(Command::parse(b"ISON", 1).is_ok());
         assert!(Command::parse(b"ISON", 0).is_err());
+        assert!(Command::parse(b"KNOCK", 1).is_ok());
+        assert!(Command::parse(b"KNOCK", 0).is_err());
         assert!(Command::parse(b"OPER", 2).is_ok());
         assert!(Command::parse(b"OPER", 0).is_err());
         assert!(Command::parse(b"INVITE", 2).is_ok());

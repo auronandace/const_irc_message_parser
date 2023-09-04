@@ -52,7 +52,9 @@ impl<'msg> Command<'msg> {
                 match input {
                     b"042" | // RPL_YOURID/RPL_YOURUUID
                     b"250" | // RPL_STATSCONN/RPL_STATSDLINE
-                    b"302"   // RPL_USERHOST
+                    b"302" | // RPL_USERHOST
+                    b"303" | // RPL_ISON
+                    b"383"   // RPL_YOURESERVICE
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
                     b"002" | // RPL_YOURHOST
@@ -294,6 +296,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("SETNAME"));},
                 b"MONITOR00000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("MONITOR"));},
+                b"ISON00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
+                                   else {return Ok(Self::Named("ISON"));},
                 b"OPER00000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("OPER"));},
                 b"INVITE000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
@@ -328,6 +332,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("USER"));},
                 b"WEBIRC000000" => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));}
                                    else {return Ok(Self::Named("WEBIRC"));},
+                b"SERVICE00000" => if params_amount < 6 {return Err(CommandError::MinimumArgsRequired(6, cmd));}
+                                   else {return Ok(Self::Named("SERVICE"));},
                 _ => return Err(CommandError::UnhandledNamed(cmd)),
             }
         }
@@ -456,6 +462,8 @@ mod const_tests {
         assert!(Command::parse(b"SETNAME", 0).is_err());
         assert!(Command::parse(b"MONITOR", 1).is_ok());
         assert!(Command::parse(b"MONITOR", 0).is_err());
+        assert!(Command::parse(b"ISON", 1).is_ok());
+        assert!(Command::parse(b"ISON", 0).is_err());
         assert!(Command::parse(b"OPER", 2).is_ok());
         assert!(Command::parse(b"OPER", 0).is_err());
         assert!(Command::parse(b"INVITE", 2).is_ok());
@@ -490,6 +498,8 @@ mod const_tests {
         assert!(Command::parse(b"USER", 0).is_err());
         assert!(Command::parse(b"WEBIRC", 4).is_ok());
         assert!(Command::parse(b"WEBIRC", 0).is_err());
+        assert!(Command::parse(b"SERVICE", 6).is_ok());
+        assert!(Command::parse(b"SERVICE", 0).is_err());
         assert!(Command::parse(b"EXCELLENT", 0).is_err());
     }
     #[test]

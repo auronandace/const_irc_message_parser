@@ -169,6 +169,7 @@ impl<'msg> Command<'msg> {
                     b"403" | // ERR_NOSUCHCHANNEL
                     b"404" | // ERR_CANNOTSENDTOCHAN
                     b"405" | // ERR_TOOMANYCHANNELS
+                    b"408" | // ERR_NOSUCHSERVICE
                     b"421" | // ERR_UNKNOWNCOMMAND
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
@@ -202,6 +203,7 @@ impl<'msg> Command<'msg> {
                     b"952"   // ERR_SILENCE
                     => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));},
                     b"010" | // RPL_BOUNCE (possibly RPL_REDIR)
+                    b"235" | // RPL_SERVLISTEND
                     b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE/RPL_TRACEPING
                     b"312" | // RPL_WHOISSERVER
                     b"322" | // RPL_LIST
@@ -223,6 +225,7 @@ impl<'msg> Command<'msg> {
                     b"311" | // RPL_WHOISUSER
                     b"314"   // RPL_WHOWASUSER
                     => if params_amount < 6 {return Err(CommandError::MinimumArgsRequired(6, cmd));},
+                    b"234" | // RPL_SERVLIST
                     b"709"   // RPL_ETRACE
                     => if params_amount < 7 {return Err(CommandError::MinimumArgsRequired(7, cmd));},
                     b"352" | // RPL_WHOREPLY
@@ -253,6 +256,7 @@ impl<'msg> Command<'msg> {
                 b"DIE000000000" => return Ok(Self::Named("DIE")),
                 b"TRACE0000000" => return Ok(Self::Named("TRACE")),
                 b"ETRACE000000" => return Ok(Self::Named("ETRACE")),
+                b"SERVLIST0000" => return Ok(Self::Named("SERVLIST")),
                 b"PASS00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("PASS"));},
                 b"NICK00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
@@ -323,6 +327,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("CHGHOST"));},
                 b"ENCAP0000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("ENCAP"));},
+                b"SQUERY000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
+                                   else {return Ok(Self::Named("SQUERY"));},
                 b"FAIL00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
                                    else {return Ok(Self::Named("FAIL"));},
                 b"WARN00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
@@ -421,6 +427,7 @@ mod const_tests {
         assert!(Command::parse(b"DIE", 0).is_ok());
         assert!(Command::parse(b"TRACE", 0).is_ok());
         assert!(Command::parse(b"ETRACE", 0).is_ok());
+        assert!(Command::parse(b"SERVLIST", 0).is_ok());
         assert!(Command::parse(b"PASS", 1).is_ok());
         assert!(Command::parse(b"PASS", 0).is_err());
         assert!(Command::parse(b"NICK", 1).is_ok());
@@ -491,6 +498,8 @@ mod const_tests {
         assert!(Command::parse(b"CHGHOST", 0).is_err());
         assert!(Command::parse(b"ENCAP", 2).is_ok());
         assert!(Command::parse(b"ENCAP", 0).is_err());
+        assert!(Command::parse(b"SQUERY", 2).is_ok());
+        assert!(Command::parse(b"SQUERY", 0).is_err());
         assert!(Command::parse(b"FAIL", 3).is_ok());
         assert!(Command::parse(b"FAIL", 0).is_err());
         assert!(Command::parse(b"WARN", 3).is_ok());

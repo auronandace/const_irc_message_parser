@@ -91,8 +91,11 @@ impl<'msg> Command<'msg> {
                     b"406" | // ERR_WASNOSUCHNICK
                     b"409" | // ERR_NOORIGIN
                     b"410" | // ERR_INVALIDCAPCMD
+                    b"411" | // ERR_NORECIPIENT
                     b"417" | // ERR_INPUTTOOLONG
                     b"422" | // ERR_NOMOTD
+                    b"424" | // ERR_FILEERROR
+                    b"445" | // ERR_SUMMONDISABLED
                     b"451" | // ERR_NOTREGISTERED
                     b"456" | // ERR_ACCEPTFULL
                     b"462" | // ERR_ALREADYREGISTERED
@@ -149,6 +152,7 @@ impl<'msg> Command<'msg> {
                     b"335" | // RPL_WHOISBOT
                     b"338" | // RPL_WHOISACTUALLY
                     b"341" | // RPL_INVITING
+                    b"342" | // RPL_SUMMONING
                     b"346" | // RPL_INVEXLIST (not 336)
                     b"347" | // RPL_ENDOFINVEXLIST (not 337)
                     b"348" | // RPL_EXCEPTLIST
@@ -174,6 +178,7 @@ impl<'msg> Command<'msg> {
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
                     b"442" | // ERR_NOTONCHANNEL
+                    b"444" | // ERR_NOLOGIN
                     b"457" | // ERR_ACCEPTEXIST
                     b"458" | // ERR_ACCEPTNOT
                     b"461" | // ERR_NEEDMOREPARAMS
@@ -309,6 +314,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("ISON"));},
                 b"KNOCK0000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("KNOCK"));},
+                b"SUMMON000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
+                                   else {return Ok(Self::Named("SUMMON"));},
                 b"OPER00000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("OPER"));},
                 b"INVITE000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
@@ -480,6 +487,8 @@ mod const_tests {
         assert!(Command::parse(b"ISON", 0).is_err());
         assert!(Command::parse(b"KNOCK", 1).is_ok());
         assert!(Command::parse(b"KNOCK", 0).is_err());
+        assert!(Command::parse(b"SUMMON", 1).is_ok());
+        assert!(Command::parse(b"SUMMON", 0).is_err());
         assert!(Command::parse(b"OPER", 2).is_ok());
         assert!(Command::parse(b"OPER", 0).is_err());
         assert!(Command::parse(b"INVITE", 2).is_ok());

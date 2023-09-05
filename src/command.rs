@@ -54,7 +54,11 @@ impl<'msg> Command<'msg> {
                     b"250" | // RPL_STATSCONN/RPL_STATSDLINE
                     b"302" | // RPL_USERHOST
                     b"303" | // RPL_ISON
-                    b"383"   // RPL_YOURESERVICE
+                    b"383" | // RPL_YOURESERVICE
+                    b"603" | // RPL_WATCHSTAT
+                    b"606" | // RPL_WATCHLIST
+                    b"607" | // RPL_ENDOFWATCHLIST
+                    b"608"   // RPL_WATCHCLEAR/RPL_CLEARWATCH
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
                     b"002" | // RPL_YOURHOST
@@ -231,6 +235,14 @@ impl<'msg> Command<'msg> {
                     b"206" | // RPL_TRACESERVER
                     b"207" | // RPL_TRACESERVICE
                     b"317" | // RPL_WHOISIDLE
+                    b"598" | // RPL_GONEAWAY
+                    b"599" | // RPL_NOTAWAY
+                    b"600" | // RPL_LOGON
+                    b"601" | // RPL_LOGOFF
+                    b"602" | // RPL_WATCHOFF
+                    b"604" | // RPL_NOWON
+                    b"605" | // RPL_NOWOFF
+                    b"609" | // RPL_NOWISAWAY
                     b"696"   // ERR_INVALIDMODEPARAM
                     => if params_amount < 5 {return Err(CommandError::MinimumArgsRequired(5, cmd));},
                     b"311" | // RPL_WHOISUSER
@@ -325,6 +337,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("SUMMON"));},
                 b"USERIP000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("USERIP"));},
+                b"WATCH0000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
+                                   else {return Ok(Self::Named("WATCH"));},
                 b"OPER00000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("OPER"));},
                 b"INVITE000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
@@ -501,6 +515,8 @@ mod const_tests {
         assert!(Command::parse(b"SUMMON", 0).is_err());
         assert!(Command::parse(b"USERIP", 1).is_ok());
         assert!(Command::parse(b"USERIP", 0).is_err());
+        assert!(Command::parse(b"WATCH", 1).is_ok());
+        assert!(Command::parse(b"WATCH", 0).is_err());
         assert!(Command::parse(b"OPER", 2).is_ok());
         assert!(Command::parse(b"OPER", 0).is_err());
         assert!(Command::parse(b"INVITE", 2).is_ok());

@@ -81,6 +81,7 @@ impl<'msg> Command<'msg> {
                     b"323" | // RPL_LISTEND
                     b"336" | // RPL_INVITELIST (not 346)
                     b"337" | // RPL_ENDOFINVITELIST (not 347)
+                    b"340" | // RPL_USERIP
                     b"354" | // RPL_WHOSPCRPL
                     b"371" | // RPL_INFO
                     b"372" | // RPL_MOTD
@@ -88,6 +89,10 @@ impl<'msg> Command<'msg> {
                     b"375" | // RPL_MOTDSTART
                     b"376" | // RPL_ENDOFMOTD
                     b"381" | // RPL_YOUREOPER
+                    b"392" | // RPL_USERSSTART
+                    b"393" | // RPL_USERS
+                    b"394" | // RPL_ENDOFUSERS
+                    b"395" | // RPL_NOUSERS
                     b"406" | // ERR_WASNOSUCHNICK
                     b"409" | // ERR_NOORIGIN
                     b"410" | // ERR_INVALIDCAPCMD
@@ -96,6 +101,7 @@ impl<'msg> Command<'msg> {
                     b"422" | // ERR_NOMOTD
                     b"424" | // ERR_FILEERROR
                     b"445" | // ERR_SUMMONDISABLED
+                    b"446" | // ERR_USERSDISABLED
                     b"451" | // ERR_NOTREGISTERED
                     b"456" | // ERR_ACCEPTFULL
                     b"462" | // ERR_ALREADYREGISTERED
@@ -262,6 +268,7 @@ impl<'msg> Command<'msg> {
                 b"TRACE0000000" => return Ok(Self::Named("TRACE")),
                 b"ETRACE000000" => return Ok(Self::Named("ETRACE")),
                 b"SERVLIST0000" => return Ok(Self::Named("SERVLIST")),
+                b"USERS0000000" => return Ok(Self::Named("USERS")),
                 b"PASS00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("PASS"));},
                 b"NICK00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
@@ -316,6 +323,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("KNOCK"));},
                 b"SUMMON000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("SUMMON"));},
+                b"USERIP000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
+                                   else {return Ok(Self::Named("USERIP"));},
                 b"OPER00000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("OPER"));},
                 b"INVITE000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
@@ -435,6 +444,7 @@ mod const_tests {
         assert!(Command::parse(b"TRACE", 0).is_ok());
         assert!(Command::parse(b"ETRACE", 0).is_ok());
         assert!(Command::parse(b"SERVLIST", 0).is_ok());
+        assert!(Command::parse(b"USERS", 0).is_ok());
         assert!(Command::parse(b"PASS", 1).is_ok());
         assert!(Command::parse(b"PASS", 0).is_err());
         assert!(Command::parse(b"NICK", 1).is_ok());
@@ -489,6 +499,8 @@ mod const_tests {
         assert!(Command::parse(b"KNOCK", 0).is_err());
         assert!(Command::parse(b"SUMMON", 1).is_ok());
         assert!(Command::parse(b"SUMMON", 0).is_err());
+        assert!(Command::parse(b"USERIP", 1).is_ok());
+        assert!(Command::parse(b"USERIP", 0).is_err());
         assert!(Command::parse(b"OPER", 2).is_ok());
         assert!(Command::parse(b"OPER", 0).is_err());
         assert!(Command::parse(b"INVITE", 2).is_ok());

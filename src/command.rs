@@ -51,7 +51,7 @@ impl<'msg> Command<'msg> {
                 let mut unhandled = false;
                 match input {
                     b"042" | // RPL_YOURID/RPL_YOURUUID
-                    b"250" | // RPL_STATSCONN/RPL_STATSDLINE
+                    b"250" | // RPL_STATSDLINE (conflict: RPL_STATSCONN)
                     b"302" | // RPL_USERHOST
                     b"303" | // RPL_ISON
                     b"383" | // RPL_YOURESERVICE
@@ -61,9 +61,9 @@ impl<'msg> Command<'msg> {
                     b"608"   // RPL_WATCHCLEAR/RPL_CLEARWATCH
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
-                    b"002" | // RPL_YOURHOST
-                    b"003" | // RPL_CREATED
-                    b"005" | // RPL_ISUPPORT
+                    b"002" | // RPL_YOURHOST/RPL_YOURHOSTIS
+                    b"003" | // RPL_CREATED/RPL_SERVERCREATED
+                    b"005" | // RPL_ISUPPORT/RPL_PROTOCTL (depreciated: RPL_BOUNCE moved to 010)
                     b"105" | // RPL_REMOTEISUPPORT
                     b"203" | // RPL_TRACEUNKNOWN
                     b"221" | // RPL_UMODEIS
@@ -77,8 +77,8 @@ impl<'msg> Command<'msg> {
                     b"266" | // RPL_GLOBALUSERS
                     b"271" | // RPL_SILELIST
                     b"272" | // RPL_ENDOFSILELIST
-                    b"281" | // RPL_ACCEPTLIST/RPL_ENDOFGLIST
-                    b"282" | // RPL_ENDOFACCEPT/RPL_JUPELIST
+                    b"281" | // RPL_ACCEPTLIST (conflict: RPL_ENDOFGLIST)
+                    b"282" | // RPL_ENDOFACCEPT (conflict: RPL_JUPELIST)
                     b"305" | // RPL_UNAWAY
                     b"306" | // RPL_NOWAWAY
                     b"321" | // RPL_LISTSTART
@@ -99,7 +99,7 @@ impl<'msg> Command<'msg> {
                     b"395" | // RPL_NOUSERS
                     b"406" | // ERR_WASNOSUCHNICK
                     b"409" | // ERR_NOORIGIN
-                    b"410" | // ERR_INVALIDCAPCMD
+                    b"410" | // ERR_INVALIDCAPCMD/ERR_INVALIDCAPSUBCOMMAND/ERR_UNKNOWNCAPCMD
                     b"411" | // ERR_NORECIPIENT
                     b"417" | // ERR_INPUTTOOLONG
                     b"422" | // ERR_NOMOTD
@@ -115,7 +115,7 @@ impl<'msg> Command<'msg> {
                     b"481" | // ERR_NOPRIVILEGES
                     b"483" | // ERR_CANTKILLSERVER
                     b"491" | // ERR_NOOPERHOST
-                    b"501" | // ERR_UMODEUNKOWNFLAG
+                    b"501" | // ERR_UMODEUNKOWNFLAG (conflict: ERR_UNKNOWNSNOMASK)
                     b"502" | // ERR_USERSDONTMATCH
                     b"511" | // ERR_SILELISTFULL
                     b"670" | // RPL_STARTTLS
@@ -148,12 +148,12 @@ impl<'msg> Command<'msg> {
                     b"263" | // RPL_TRYAGAIN
                     b"276" | // RPL_WHOISCERTFP
                     b"301" | // RPL_AWAY
-                    b"307" | // RPL_WHOISREGNICK
+                    b"307" | // RPL_USERIP (conflicts: RPL_WHOISREGNICK & RPL_SUPERHOST)
                     b"313" | // RPL_WHOISOPERATOR
                     b"315" | // RPL_ENDOFWHO
                     b"318" | // RPL_ENDOFWHOIS
                     b"319" | // RPL_WHOISCHANNELS
-                    b"320" | // RPL_WHOISSPECIAL
+                    b"320" | // RPL_WHOISSPECIAL (conflicts: RPL_WHOIS_HIDDEN & RPL_WHOISVIRT)
                     b"324" | // RPL_CHANNELMODEIS
                     b"329" | // RPL_CREATIONTIME
                     b"331" | // RPL_NOTOPIC
@@ -183,7 +183,7 @@ impl<'msg> Command<'msg> {
                     b"403" | // ERR_NOSUCHCHANNEL
                     b"404" | // ERR_CANNOTSENDTOCHAN
                     b"405" | // ERR_TOOMANYCHANNELS
-                    b"408" | // ERR_NOSUCHSERVICE
+                    b"408" | // ERR_NOSUCHSERVICE (conflicts: ERR_NOCOLORSONCHAN & ERR_NOCTRLSONCHAN)
                     b"421" | // ERR_UNKNOWNCOMMAND
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
@@ -217,9 +217,9 @@ impl<'msg> Command<'msg> {
                     b"951" | // RPL_SILENCED
                     b"952"   // ERR_SILENCE
                     => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));},
-                    b"010" | // RPL_BOUNCE (possibly RPL_REDIR)
+                    b"010" | // RPL_BOUNCE/RPL_REDIR (depreciated: RPL_STATMEM)
                     b"235" | // RPL_SERVLISTEND
-                    b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE/RPL_TRACEPING
+                    b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE (conflict: RPL_TRACEPING)
                     b"312" | // RPL_WHOISSERVER
                     b"322" | // RPL_LIST
                     b"330" | // RPL_WHOISACCOUNT
@@ -231,7 +231,7 @@ impl<'msg> Command<'msg> {
                     b"734" | // ERR_MONLISTFULL
                     b"900"   // RPL_LOGGEDIN
                     => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));},
-                    b"004" | // RPL_MYINFO
+                    b"004" | // RPL_MYINFO/RPL_SERVERVERSION
                     b"206" | // RPL_TRACESERVER
                     b"207" | // RPL_TRACESERVICE
                     b"317" | // RPL_WHOISIDLE

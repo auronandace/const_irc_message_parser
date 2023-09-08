@@ -51,10 +51,23 @@ impl<'msg> Command<'msg> {
                 let mut unhandled = false;
                 match input {
                     b"042" | // RPL_YOURID/RPL_YOURUUID
+                    b"217" | // RPL_STATSQLINE (conflict: RPL_STATSPLINE)
+                    b"231" | // RPL_SERVICEINFO
+                    b"232" | // RPL_ENDOFSERVICES (conflict: RPL_RULES)
+                    b"233" | // RPL_SERVICE
                     b"250" | // RPL_STATSDLINE (conflict: RPL_STATSCONN)
+                    b"300" | // RPL_NONE
                     b"302" | // RPL_USERHOST
                     b"303" | // RPL_ISON
+                    b"316" | // RPL_WHOISPRIVDEAF (conflict: RPL_WHOISCHANOP)
+                    b"361" | // RPL_KILLDONE
+                    b"362" | // RPL_CLOSING
+                    b"363" | // RPL_CLOSEEND
+                    b"373" | // RPL_INFOSTART
                     b"383" | // RPL_YOURESERVICE
+                    b"384" | // RPL_MYPORTIS
+                    b"466" | // ERR_YOUWILLBEBANNED
+                    b"492" | // ERR_NOSERVICEHOST
                     b"603" | // RPL_WATCHSTAT
                     b"606" | // RPL_WATCHLIST
                     b"607" | // RPL_ENDOFWATCHLIST
@@ -67,6 +80,7 @@ impl<'msg> Command<'msg> {
                     b"105" | // RPL_REMOTEISUPPORT
                     b"203" | // RPL_TRACEUNKNOWN
                     b"221" | // RPL_UMODEIS
+                    b"242" | // RPL_STATSUPTIME
                     b"251" | // RPL_LUSERCLIENT
                     b"255" | // RPL_LUSERME
                     b"256" | // RPL_ADMINME
@@ -79,6 +93,7 @@ impl<'msg> Command<'msg> {
                     b"272" | // RPL_ENDOFSILELIST
                     b"281" | // RPL_ACCEPTLIST (conflict: RPL_ENDOFGLIST)
                     b"282" | // RPL_ENDOFACCEPT (conflict: RPL_JUPELIST)
+                    b"304" | // RPL_TEXT
                     b"305" | // RPL_UNAWAY
                     b"306" | // RPL_NOWAWAY
                     b"321" | // RPL_LISTSTART
@@ -101,14 +116,18 @@ impl<'msg> Command<'msg> {
                     b"409" | // ERR_NOORIGIN
                     b"410" | // ERR_INVALIDCAPCMD/ERR_INVALIDCAPSUBCOMMAND/ERR_UNKNOWNCAPCMD
                     b"411" | // ERR_NORECIPIENT
+                    b"412" | // ERR_NOTEXTTOSEND
                     b"417" | // ERR_INPUTTOOLONG
                     b"422" | // ERR_NOMOTD
                     b"424" | // ERR_FILEERROR
+                    b"431" | // ERR_NONICKNAMEGIVEN
+                    b"436" | // ERR_ERR_NICKCOLLISION
                     b"445" | // ERR_SUMMONDISABLED
                     b"446" | // ERR_USERSDISABLED
                     b"451" | // ERR_NOTREGISTERED
                     b"456" | // ERR_ACCEPTFULL
                     b"462" | // ERR_ALREADYREGISTERED
+                    b"463" | // ERR_NOPERMFORHOST
                     b"464" | // ERR_PASSWDMISMATCH
                     b"465" | // ERR_YOUREBANNEDCREEP
                     b"476" | // ERR_BADCHANMASK
@@ -141,6 +160,8 @@ impl<'msg> Command<'msg> {
                     b"205" | // RPL_TRACEUSER
                     b"208" | // RPL_TRACENEWTYPE
                     b"209" | // RPL_TRACECLASS
+                    b"212" | // RPL_STATSCOMMANDS
+                    b"219" | // RPL_ENDOFSTATS
                     b"252" | // RPL_LUSEROP
                     b"253" | // RPL_LUSERUNKNOWN
                     b"254" | // RPL_LUSERCHANNELS
@@ -183,8 +204,13 @@ impl<'msg> Command<'msg> {
                     b"403" | // ERR_NOSUCHCHANNEL
                     b"404" | // ERR_CANNOTSENDTOCHAN
                     b"405" | // ERR_TOOMANYCHANNELS
+                    b"407" | // ERR_TOOMANYTARGETS
                     b"408" | // ERR_NOSUCHSERVICE (conflicts: ERR_NOCOLORSONCHAN & ERR_NOCTRLSONCHAN)
+                    b"413" | // ERR_NOTPLEVEL
+                    b"414" | // ERR_WILDTOPLEVEL
+                    b"415" | // ERR_BADMASK
                     b"421" | // ERR_UNKNOWNCOMMAND
+                    b"423" | // ERR_NOADMININFO
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
                     b"442" | // ERR_NOTONCHANNEL
@@ -192,6 +218,7 @@ impl<'msg> Command<'msg> {
                     b"457" | // ERR_ACCEPTEXIST
                     b"458" | // ERR_ACCEPTNOT
                     b"461" | // ERR_NEEDMOREPARAMS
+                    b"467" | // ERR_KEYSET
                     b"471" | // ERR_CHANNELISFULL
                     b"472" | // ERR_UNKNOWNMODE
                     b"473" | // ERR_INVITEONLYCHAN
@@ -234,6 +261,7 @@ impl<'msg> Command<'msg> {
                     b"004" | // RPL_MYINFO/RPL_SERVERVERSION
                     b"206" | // RPL_TRACESERVER
                     b"207" | // RPL_TRACESERVICE
+                    b"244" | // RPL_STATSHLINE
                     b"317" | // RPL_WHOISIDLE
                     b"598" | // RPL_GONEAWAY
                     b"599" | // RPL_NOTAWAY
@@ -245,12 +273,20 @@ impl<'msg> Command<'msg> {
                     b"609" | // RPL_NOWISAWAY
                     b"696"   // ERR_INVALIDMODEPARAM
                     => if params_amount < 5 {return Err(CommandError::MinimumArgsRequired(5, cmd));},
+                    b"218" | // RPL_STATSYLINE
+                    b"241" | // RPL_STATSLLINE
+                    b"243" | // RPL_STATSOLINE
                     b"311" | // RPL_WHOISUSER
                     b"314"   // RPL_WHOWASUSER
                     => if params_amount < 6 {return Err(CommandError::MinimumArgsRequired(6, cmd));},
+                    b"213" | // RPL_STATSCLINE
+                    b"214" | // RPL_STATSNLINE (conflict: RPL_STATSOLDNLINE)
+                    b"215" | // RPL_STATSILINE
+                    b"216" | // RPL_STATSKLINE
                     b"234" | // RPL_SERVLIST
                     b"709"   // RPL_ETRACE
                     => if params_amount < 7 {return Err(CommandError::MinimumArgsRequired(7, cmd));},
+                    b"211" | // RPL_STATSLINKINFO
                     b"352" | // RPL_WHOREPLY
                     b"708"   // RPL_ETRACEFULL
                     => if params_amount < 8 {return Err(CommandError::MinimumArgsRequired(8, cmd));},

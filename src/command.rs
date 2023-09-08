@@ -51,10 +51,12 @@ impl<'msg> Command<'msg> {
                 let mut unhandled = false;
                 match input {
                     b"042" | // RPL_YOURID/RPL_YOURUUID
+                    b"210" | // RPL_TRACERECONNECT (conflict: RPL_STATS/RPL_STATSHELP)
                     b"217" | // RPL_STATSQLINE (conflict: RPL_STATSPLINE)
                     b"231" | // RPL_SERVICEINFO
                     b"232" | // RPL_ENDOFSERVICES (conflict: RPL_RULES)
                     b"233" | // RPL_SERVICE
+                    b"246" | // RPL_STATSPING
                     b"250" | // RPL_STATSDLINE (conflict: RPL_STATSCONN)
                     b"300" | // RPL_NONE
                     b"302" | // RPL_USERHOST
@@ -133,6 +135,8 @@ impl<'msg> Command<'msg> {
                     b"476" | // ERR_BADCHANMASK
                     b"481" | // ERR_NOPRIVILEGES
                     b"483" | // ERR_CANTKILLSERVER
+                    b"484" | // ERR_RESTRICTED (conflicts: ERR_ISCHANSERVICE & ERR_DESYNC & ERR_ATTACKDENY)
+                    b"485" | // ERR_UNIQOPRIVSNEEDED (conflicts: ERR_KILLDENY & ERR_CANTKICKADMIN & ERR_ISREALSERVICE & ERR_CHANBANREASON)
                     b"491" | // ERR_NOOPERHOST
                     b"501" | // ERR_UMODEUNKOWNFLAG (conflict: ERR_UNKNOWNSNOMASK)
                     b"502" | // ERR_USERSDONTMATCH
@@ -176,6 +180,7 @@ impl<'msg> Command<'msg> {
                     b"319" | // RPL_WHOISCHANNELS
                     b"320" | // RPL_WHOISSPECIAL (conflicts: RPL_WHOIS_HIDDEN & RPL_WHOISVIRT)
                     b"324" | // RPL_CHANNELMODEIS
+                    b"325" | // RPL_UNIQOPIS (conflicts: RPL_CHANNELPASSIS & RPL_WHOISWEBIRC & RPL_CHANNELMLOCK)
                     b"329" | // RPL_CREATIONTIME
                     b"331" | // RPL_NOTOPIC
                     b"332" | // RPL_TOPIC
@@ -213,6 +218,7 @@ impl<'msg> Command<'msg> {
                     b"423" | // ERR_NOADMININFO
                     b"432" | // ERR_ERRONEUSNICKNAME
                     b"433" | // ERR_NICKNAMEINUSE
+                    b"437" | // ERR_UNAVAILRESOURCE (conflict: ERR_BANNICKCHANGE)
                     b"442" | // ERR_NOTONCHANNEL
                     b"444" | // ERR_NOLOGIN
                     b"457" | // ERR_ACCEPTEXIST
@@ -224,6 +230,8 @@ impl<'msg> Command<'msg> {
                     b"473" | // ERR_INVITEONLYCHAN
                     b"474" | // ERR_BANNEDFROMCHAN
                     b"475" | // ERR_BADCHANNELKEY
+                    b"477" | // ERR_NOCHANMODES/ERR_MODELESS (conflict: ERR_NEEDREGGEDNICK)
+                    b"478" | // ERR_BANLISTFULL
                     b"482" | // ERR_CHANOPRIVSNEEDED
                     b"524" | // ERR_HELPNOTFOUND
                     b"525" | // ERR_INVALIDKEY

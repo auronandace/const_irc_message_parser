@@ -85,11 +85,14 @@ impl<'msg> IrcMsg<'msg> {
                     Err(e) => return Err(IrcMsgError::Source(e)),
                 }
                 command_started = true;
-            } else if command_started && input[index] == b' ' {
+            } else if command_started && !parameters_started && input[index] == b' ' {
                 parameters_started = true;
-                let (c, _) = copy.split_at(index - after_source_end);
+                let (c, _) = if source_present {copy.split_at(index - after_source_end)}
+                else {copy.split_at(index - after_tag_end)};
                 copy = c;
                 after_command_end = index + 1;
+            } else if tag_finished && !source_present && !command_started {
+                command_started = true;
             } else if parameters_started {break;}
             index += 1;
         }
@@ -368,6 +371,56 @@ mod const_tests {
                 assert!(is_identical(first_param.as_bytes(), b"#chan"));
                 let last_param = params.extract_last();
                 assert!(is_identical(last_param.as_bytes(), b"Hey what's up!"));
+            }
+        }
+        let msg = IrcMsg::parse(b"@time=2023-10-29T19:28:04.424Z PING :tantalum.libera.chat");
+        assert!(msg.is_ok());
+        if let Ok(msg) = msg {
+            assert!(msg.tags().is_some());
+            if let Some(tags) = msg.tags {
+                assert!(tags.count() == 1);
+                assert!(is_identical(tags.content().as_bytes(), b"@time=2023-10-29T19:28:04.424Z"));
+                let only_tag = tags.extract_first();
+                assert!(!only_tag.is_client_only_tag());
+                assert!(only_tag.vendor().is_none());
+                assert!(is_identical(only_tag.key_name().as_bytes(), b"time"));
+                assert!(only_tag.escaped_value().is_some());
+                if let Some(ev) = only_tag.escaped_value() {
+                    assert!(is_identical(ev.as_bytes(), b"2023-10-29T19:28:04.424Z"));
+                }
+            }
+            assert!(msg.source().is_none());
+            assert!(is_named(msg.command));
+            if let Command::Named(cmd) = msg.command {assert!(is_identical(cmd.as_bytes(), b"PING"));}
+            assert!(msg.parameters.is_some());
+            if let Some(params) = msg.parameters() {
+                assert!(params.count() == 1);
+                assert!(is_identical(params.content().as_bytes(), b":tantalum.libera.chat"));
+            }
+        }
+        let msg = IrcMsg::parse(b"@time=2023-10-29T19:30:19.424Z ERROR :Closing Link");
+        assert!(msg.is_ok());
+        if let Ok(msg) = msg {
+            assert!(msg.tags().is_some());
+            if let Some(tags) = msg.tags {
+                assert!(tags.count() == 1);
+                assert!(is_identical(tags.content().as_bytes(), b"@time=2023-10-29T19:30:19.424Z"));
+                let only_tag = tags.extract_first();
+                assert!(!only_tag.is_client_only_tag());
+                assert!(only_tag.vendor().is_none());
+                assert!(is_identical(only_tag.key_name().as_bytes(), b"time"));
+                assert!(only_tag.escaped_value().is_some());
+                if let Some(ev) = only_tag.escaped_value() {
+                    assert!(is_identical(ev.as_bytes(), b"2023-10-29T19:30:19.424Z"));
+                }
+            }
+            assert!(msg.source().is_none());
+            assert!(is_named(msg.command));
+            if let Command::Named(cmd) = msg.command {assert!(is_identical(cmd.as_bytes(), b"ERROR"));}
+            assert!(msg.parameters.is_some());
+            if let Some(params) = msg.parameters() {
+                assert!(params.count() == 1);
+                assert!(is_identical(params.content().as_bytes(), b":Closing Link"));
             }
         }
         let msg = IrcMsg::parse_utf8_only(b":irc.example.com CAP LS * :multi-prefix extended-join sasl");

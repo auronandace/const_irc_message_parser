@@ -138,47 +138,27 @@ impl IrcFmtByte {
                                 } else if let Some(codes) = Self::irc_colour_codes(after) {
                                     match codes {
                                         ColourCodeSize::SingleDigit => {
-                                            let (code, after_code) = after.split_at(1);
-                                            let after_code = if after_code.is_empty() {None} else {Some(after_code)};
-                                            let colours = Some((code, None));
+                                            let (colours, after_code) = Self::one_colour(after, 1);
                                             return Some((before, Some(fb), colours, after_code));
                                         },
                                         ColourCodeSize::DoubleDigit => {
-                                            let (code, after_code) = after.split_at(2);
-                                            let after_code = if after_code.is_empty() {None} else {Some(after_code)};
-                                            let colours = Some((code, None));
+                                            let (colours, after_code) = Self::one_colour(after, 2);
                                             return Some((before, Some(fb), colours, after_code));
                                         },
                                         ColourCodeSize::SingleAndSingle => {
-                                            let (foreground, comma_onwards) = after.split_at(1);
-                                            let (_, after_comma) = comma_onwards.split_at(1);
-                                            let (background, after_codes) = after_comma.split_at(1);
-                                            let after_codes = if after_codes.is_empty() {None} else {Some(after_codes)};
-                                            let colours = Some((foreground, Some(background)));
+                                            let (colours, after_codes) = Self::two_colours(after, 1, 1);
                                             return Some((before, Some(fb), colours, after_codes));
                                         },
                                         ColourCodeSize::SingleAndDouble => {
-                                            let (foreground, comma_onwards) = after.split_at(1);
-                                            let (_, after_comma) = comma_onwards.split_at(1);
-                                            let (background, after_codes) = after_comma.split_at(2);
-                                            let after_codes = if after_codes.is_empty() {None} else {Some(after_codes)};
-                                            let colours = Some((foreground, Some(background)));
+                                            let (colours, after_codes) = Self::two_colours(after, 1, 2);
                                             return Some((before, Some(fb), colours, after_codes));
                                         },
                                         ColourCodeSize::DoubleAndSingle => {
-                                            let (foreground, comma_onwards) = after.split_at(2);
-                                            let (_, after_comma) = comma_onwards.split_at(1);
-                                            let (background, after_codes) = after_comma.split_at(1);
-                                            let after_codes = if after_codes.is_empty() {None} else {Some(after_codes)};
-                                            let colours = Some((foreground, Some(background)));
+                                            let (colours, after_codes) = Self::two_colours(after, 2, 1);
                                             return Some((before, Some(fb), colours, after_codes));
                                         },
                                         ColourCodeSize::DoubleAndDouble => {
-                                            let (foreground, comma_onwards) = after.split_at(2);
-                                            let (_, after_comma) = comma_onwards.split_at(1);
-                                            let (background, after_codes) = after_comma.split_at(2);
-                                            let after_codes = if after_codes.is_empty() {None} else {Some(after_codes)};
-                                            let colours = Some((foreground, Some(background)));
+                                            let (colours, after_codes) = Self::two_colours(after, 2, 2);
                                             return Some((before, Some(fb), colours, after_codes));
                                         },
                                     }
@@ -216,6 +196,16 @@ impl IrcFmtByte {
             }
         }
         Some((Some(input), None, None, None))
+    }
+    const fn one_colour(after: &[u8], index: usize) -> (OptIrcColours, OptMsgPart) {
+        let (code, after_code) = after.split_at(index);
+        (Some((code, None)), if after_code.is_empty() {None} else {Some(after_code)})
+    }
+    const fn two_colours(after: &[u8], first_split: usize, last_split: usize) -> (OptIrcColours, OptMsgPart) {
+        let (foreground, comma_onwards) = after.split_at(first_split);
+        let (_, after_comma) = comma_onwards.split_at(1);
+        let (background, after_codes) = after_comma.split_at(last_split);
+        (Some((foreground, Some(background))), if after_codes.is_empty() {None} else {Some(after_codes)})
     }
     const fn irc_colour_codes(input: &[u8]) -> Option<ColourCodeSize> {
         let mut index = 0;

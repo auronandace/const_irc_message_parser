@@ -52,14 +52,14 @@ impl<'msg> Parameters<'msg> {
     pub const fn count(&self) -> usize {
         self.amount
     }
-    /// Returns all the parameters as a [`ContentType`](crate::ContentType).
+    /// Returns all the parameters as a [`ContentType`].
     ///
     /// This includes the `:` before the last parameter if present.
     #[must_use]
     pub const fn content(&self) -> ContentType {
         self.content
     }
-    /// Returns the first parameter as a [`ContentType`](crate::ContentType).
+    /// Returns the first parameter as a [`ContentType`].
     ///
     /// Does not include `:` for the trailing parameter.
     #[must_use]
@@ -69,7 +69,7 @@ impl<'msg> Parameters<'msg> {
             None => unreachable!(),
         }
     }
-    /// Returns the last parameter as a [`ContentType`](crate::ContentType).
+    /// Returns the last parameter as a [`ContentType`].
     ///
     /// Does not include `:` for the trailing parameter.
     #[must_use]
@@ -79,7 +79,7 @@ impl<'msg> Parameters<'msg> {
             None => unreachable!(),
         }
     }
-    /// Returns the requested parameter as a [`ContentType`](crate::ContentType) at the specified index.
+    /// Returns the requested parameter as a [`ContentType`] at the specified index.
     ///
     /// Index starts at 0. If out of bounds it returns `None`. Does not include `:` for the trailing parameter.
     #[must_use]

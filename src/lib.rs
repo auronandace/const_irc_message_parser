@@ -10,7 +10,9 @@
 //!
 //! I wanted to see how much of an IRC message parser can be written in a [const context]. Every public
 //! and private function is const. I was even able to make all the tests const functions even
-//! though it ends up being more verbose.
+//! though it ends up being more verbose. The only exceptions are the Display impls as functions on Traits are
+//! not yet allowed to be const ([click here for details]). I am also unaware of how to
+//! test Display impls in a const manner for code coverage. Suggestions welcome.
 //!
 //! ## Usage
 //!
@@ -18,6 +20,7 @@
 //! Feed that single slice into the parser without the trailing carriage return and line feed to create an [`IrcMsg`].
 //! Use the provided methods to extract the information desired for an IRC client, server or bot.
 //!
+//! [click here for details]: <https://github.com/rust-lang/rust/issues/103265>
 //! [alloc]: <https://doc.rust-lang.org/alloc/index.html>
 //! [const context]: <https://doc.rust-lang.org/reference/const_eval.html>
 #![no_std]
@@ -33,6 +36,7 @@ pub mod source;
 pub mod command;
 pub mod parameters;
 pub mod formatting;
+pub mod isupport;
 
 /// A single IRC Message created from a slice of bytes.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

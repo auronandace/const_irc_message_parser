@@ -80,7 +80,7 @@ impl<'msg> ISupportToken<'msg> {
 
 impl<'msg> core::fmt::Display for ISupportToken<'msg> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        if self.is_set() {write!(f, "-")?;}
+        if !self.is_set() {write!(f, "-")?;}
         if let Some(value) = self.value() {write!(f, "{}={}", self.parameter, value)}
         else {write!(f, "{}", self.parameter())}
     }

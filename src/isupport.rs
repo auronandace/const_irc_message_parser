@@ -61,6 +61,20 @@ impl<'msg> ISupportToken<'msg> {
         };
         Ok(ISupportToken{parameter, value, set})
     }
+    /// Generates an [`ISupportToken`] from a [`ContentType`].
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if the input is empty, the parameter or value contains an invalid byte as per the
+    /// [specification], the lack of a parameter before the `=` or the presence of an `=` if the token starts with `-`.
+    ///
+    /// [specification]: <https://modern.ircdocs.horse/#rplisupport-005>
+    pub const fn from_contenttype(input: ContentType<'msg>) -> Result<Self, ISupportTokenError> {
+        match input {
+            ContentType::StringSlice(str) => Self::parse(str.as_bytes()),
+            ContentType::NonUtf8ByteSlice(bytes) => Self::parse(bytes),
+        }
+    }
     /// Returns the parameter of the [`ISupportToken`] as a [`ContentType`].
     #[must_use]
     pub const fn parameter(&self) -> ContentType {
@@ -112,7 +126,7 @@ pub enum ISupportTokenError {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::const_tests::is_identical;
+    use crate::{ContentType, const_tests::is_identical};
     use super::ISupportToken;
     #[test]
     const fn parse_token() {
@@ -122,6 +136,11 @@ mod const_tests {
         assert!(ISupportToken::parse(b"ACCOUNTEXTBAN=a").is_ok());
         assert!(ISupportToken::parse(b"ACCOUNTEXTBAN=\0a").is_err());
         assert!(ISupportToken::parse(b"PREFIX=(ov)@+").is_ok());
+    }
+    #[test]
+    const fn parse_token_from_contenttype() {
+        assert!(ISupportToken::from_contenttype(ContentType::new(b"ACCOUNTEXTBAN=a")).is_ok());
+        assert!(ISupportToken::from_contenttype(ContentType::new(&[0, 159, 146, 150])).is_err());
     }
     #[test]
     const fn get_parameter() {

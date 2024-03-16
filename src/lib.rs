@@ -261,19 +261,21 @@ impl<'msg> core::fmt::Display for ContentType<'msg> {
     }
 }
 
+const fn is_identical(first: &[u8], second: &[u8]) -> bool {
+    if first.len() == second.len() {
+        let mut index = 0;
+        while index < first.len() {
+            if first[index] != second[index] {return false;}
+            index += 1;
+        }
+        return true;
+    }
+    false
+}
+
 #[cfg(test)]
 mod const_tests {
-    use crate::{remove_possible_leading_space, ContentType, IrcMsg, source::Origin, command::Command};
-    pub const fn is_identical(first: &[u8], second: &[u8]) -> bool {
-        if first.len() != second.len() {false} else {
-            let mut index = 0;
-            while index < first.len() {
-                if first[index] != second[index] {return false;}
-                index += 1;
-            }
-            true
-        }
-    }
+    use crate::{remove_possible_leading_space, ContentType, IrcMsg, source::Origin, command::Command, is_identical};
     pub const fn is_nick(input: Origin) -> bool {
         match input {
             Origin::Servername(_) => false,

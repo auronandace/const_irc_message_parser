@@ -214,12 +214,12 @@ pub enum SourceError {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::{const_tests::{is_nick, self}, ContentType};
+    use crate::{const_tests::is_nick, ContentType, is_identical};
     use super::{Origin, Nickname, Servername, Source, is_invalid_byte};
     const fn is_same_content(first: ContentType, second: &str) -> bool {
         match first {
-            ContentType::StringSlice(s) => const_tests::is_identical(s.as_bytes(), second.as_bytes()),
-            ContentType::NonUtf8ByteSlice(b) => const_tests::is_identical(b, second.as_bytes()),
+            ContentType::StringSlice(s) => is_identical(s.as_bytes(), second.as_bytes()),
+            ContentType::NonUtf8ByteSlice(b) => is_identical(b, second.as_bytes()),
         }
     }
     const fn is_same_char(first: char, second: char) -> bool {first == second}

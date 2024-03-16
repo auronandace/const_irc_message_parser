@@ -270,7 +270,7 @@ const fn is_hex_colour(input: &[u8]) -> bool {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::const_tests::is_identical;
+    use crate::is_identical;
     use super::IrcFmtByte;
     #[test]
     const fn detect_irc_formatting() {

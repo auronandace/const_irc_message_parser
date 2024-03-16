@@ -254,7 +254,7 @@ pub enum TagsError {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::const_tests::is_identical;
+    use crate::is_identical;
     use super::Tags;
     #[test]
     const fn parsing_tags() {

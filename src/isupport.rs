@@ -10,7 +10,7 @@
 //! The first and trailing parameter in the `RPL_ISUPPORT` (`005`) numeric [`IrcMsg`](crate::IrcMsg) are not
 //! [`ISupportToken`]s. All the [`Parameters`](crate::Parameters) inbetween them are.
 
-use crate::ContentType;
+use crate::{ContentType, is_identical};
 
 /// A single ISUPPORT token.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -75,6 +75,27 @@ impl<'msg> ISupportToken<'msg> {
             ContentType::NonUtf8ByteSlice(bytes) => Self::parse(bytes),
         }
     }
+    /// Checks a slice of [`ISupportToken`]s for duplicate parameters.
+    ///
+    /// An IRC server should not send the same [`ISupportToken`] in a single `RPL_ISUPPORT` (`005`)
+    /// numeric [`IrcMsg`](crate::IrcMsg).
+    #[must_use]
+    pub const fn contains_duplicate_parameters(tokens: &[Self]) -> bool {
+        let mut index = 0;
+        while index < tokens.len() {
+            let mut inner_index = 0;
+            while inner_index < tokens.len() {
+                if index != inner_index {
+                    let outer = tokens[index].parameter;
+                    let inner = tokens[inner_index].parameter;
+                    if is_identical(outer.as_bytes(), inner.as_bytes()) {return true;}
+                }
+                inner_index += 1;
+            }
+            index += 1;
+        }
+        false
+    }
     /// Returns the parameter of the [`ISupportToken`] as a [`ContentType`].
     #[must_use]
     pub const fn parameter(&self) -> ContentType {
@@ -126,7 +147,7 @@ pub enum ISupportTokenError {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::{ContentType, const_tests::is_identical};
+    use crate::{ContentType, is_identical};
     use super::ISupportToken;
     #[test]
     const fn parse_token() {
@@ -141,6 +162,14 @@ mod const_tests {
     const fn parse_token_from_contenttype() {
         assert!(ISupportToken::from_contenttype(ContentType::new(b"ACCOUNTEXTBAN=a")).is_ok());
         assert!(ISupportToken::from_contenttype(ContentType::new(&[0, 159, 146, 150])).is_err());
+    }
+    #[test]
+    const fn duplicate_parameter_check() {
+        let token1 = ISupportToken {parameter: ContentType::new(b"ABC"), value: None, set: true};
+        let token2 = ISupportToken {parameter: ContentType::new(b"FNC"), value: None, set: true};
+        let token3 = ISupportToken {parameter: ContentType::new(b"FNC"), value: None, set: true};
+        assert!(ISupportToken::contains_duplicate_parameters(&[token1, token2, token3]));
+        assert!(!ISupportToken::contains_duplicate_parameters(&[token1, token2]));
     }
     #[test]
     const fn get_parameter() {

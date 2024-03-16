@@ -150,7 +150,7 @@ pub enum ParametersError {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::{ContentType, const_tests::is_identical};
+    use crate::{ContentType, is_identical};
     use super::Parameters;
     #[test]
     const fn get_first() {

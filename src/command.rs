@@ -468,7 +468,7 @@ const fn command_to_uppercase_bytes(input: &[u8]) -> [u8; 12] {
 
 #[cfg(test)]
 mod const_tests {
-    use crate::const_tests::is_identical;
+    use crate::is_identical;
     use super::{Command, command_to_uppercase_bytes};
     #[test]
     const fn parsing_command() {

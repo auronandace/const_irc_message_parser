@@ -73,7 +73,8 @@ impl<'msg> Command<'msg> {
                     b"603" | // RPL_WATCHSTAT
                     b"606" | // RPL_WATCHLIST
                     b"607" | // RPL_ENDOFWATCHLIST
-                    b"608"   // RPL_WATCHCLEAR/RPL_CLEARWATCH
+                    b"608" | // RPL_WATCHCLEAR/RPL_CLEARWATCH
+                    b"762"   // RPL_METADATAEND
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
                     b"002" | // RPL_YOURHOST/RPL_YOURHOSTIS
@@ -150,6 +151,9 @@ impl<'msg> Command<'msg> {
                     b"732" | // RPL_MONLIST
                     b"733" | // RPL_ENDOFMONLIST
                     b"759" | // RPL_ETRACEEND
+                    b"764" | // ERR_METADATALIMIT
+                    b"765" | // ERR_TARGETINVALID
+                    b"767" | // ERR_KEYINVALID
                     b"902" | // ERR_NICKLOCKED
                     b"903" | // RPL_SASLSUCCESS
                     b"904" | // ERR_SASLFAIL
@@ -246,6 +250,10 @@ impl<'msg> Command<'msg> {
                     b"714" | // ERR_KNOCKONCHAN
                     b"718" | // RPL_UMODEGMSG
                     b"723" | // ERR_NOPRIVS
+                    b"761" | // RPL_KEYVALUE
+                    b"766" | // ERR_NOMATCHINGKEY
+                    b"768" | // ERR_KEYNOTSET
+                    b"769" | // ERR_KEYNOPERMISSION
                     b"901" | // RPL_LOGGEDOUT
                     b"908" | // RPL_SASLMECHS
                     b"950" | // RPL_UNSILENCED
@@ -264,6 +272,7 @@ impl<'msg> Command<'msg> {
                     b"441" | // ERR_USERNOTINCHANNEL
                     b"443" | // ERR_USERONCHANNEL
                     b"734" | // ERR_MONLISTFULL
+                    b"760" | // RPL_WHOISKEYVALUE
                     b"900"   // RPL_LOGGEDIN
                     => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));},
                     b"004" | // RPL_MYINFO/RPL_SERVERVERSION
@@ -403,6 +412,8 @@ impl<'msg> Command<'msg> {
                                    else {return Ok(Self::Named("ENCAP"));},
                 b"SQUERY000000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
                                    else {return Ok(Self::Named("SQUERY"));},
+                b"METADATA0000" => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));}
+                                   else {return Ok(Self::Named("METADATA"));},
                 b"FAIL00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
                                    else {return Ok(Self::Named("FAIL"));},
                 b"WARN00000000" => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));}
@@ -581,6 +592,8 @@ mod const_tests {
         assert!(Command::parse(b"ENCAP", 0).is_err());
         assert!(Command::parse(b"SQUERY", 2).is_ok());
         assert!(Command::parse(b"SQUERY", 0).is_err());
+        assert!(Command::parse(b"METADATA", 2).is_ok());
+        assert!(Command::parse(b"METADATA", 0).is_err());
         assert!(Command::parse(b"FAIL", 3).is_ok());
         assert!(Command::parse(b"FAIL", 0).is_err());
         assert!(Command::parse(b"WARN", 3).is_ok());

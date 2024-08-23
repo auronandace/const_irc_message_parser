@@ -15,9 +15,10 @@ use crate::{ContentType, is_identical};
 /// A single ISUPPORT token.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ISupportToken<'msg> {
-    parameter: ContentType<'msg>,
-    value: Option<ContentType<'msg>>,
     set: bool,
+    parameter: ContentType<'msg>,
+    equals_present: bool,
+    value: Option<ContentType<'msg>>,
 }
 
 impl<'msg> ISupportToken<'msg> {
@@ -59,7 +60,7 @@ impl<'msg> ISupportToken<'msg> {
         } else {
             (ContentType::new(copy), None)
         };
-        Ok(ISupportToken{parameter, value, set})
+        Ok(ISupportToken{set, parameter, equals_present, value})
     }
     /// Generates an [`ISupportToken`] from a [`ContentType`].
     ///
@@ -117,6 +118,7 @@ impl<'msg> core::fmt::Display for ISupportToken<'msg> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if !self.is_set() {write!(f, "-")?;}
         if let Some(value) = self.value() {write!(f, "{}={}", self.parameter, value)}
+        else if self.equals_present {write!(f, "{}=", self.parameter)}
         else {write!(f, "{}", self.parameter())}
     }
 }
@@ -165,9 +167,9 @@ mod const_tests {
     }
     #[test]
     const fn duplicate_parameter_check() {
-        let token1 = ISupportToken {parameter: ContentType::new(b"ABC"), value: None, set: true};
-        let token2 = ISupportToken {parameter: ContentType::new(b"FNC"), value: None, set: true};
-        let token3 = ISupportToken {parameter: ContentType::new(b"FNC"), value: None, set: true};
+        let token1 = ISupportToken {set: true, parameter: ContentType::new(b"ABC"), equals_present: false, value: None};
+        let token2 = ISupportToken {set: true, parameter: ContentType::new(b"FNC"), equals_present: false, value: None};
+        let token3 = ISupportToken {set: true, parameter: ContentType::new(b"FNC"), equals_present: false, value: None};
         assert!(ISupportToken::contains_duplicate_parameters(&[token1, token2, token3]));
         assert!(!ISupportToken::contains_duplicate_parameters(&[token1, token2]));
     }

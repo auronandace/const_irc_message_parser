@@ -50,6 +50,11 @@ impl<'msg> Command<'msg> {
             if cmd.len() == 3 && number_count == 3 {
                 let mut unhandled = false;
                 match input {
+                    b"006" | // RPL_MAP (unreal)
+                    b"007" | // RPL_MAPEND/RPL_ENDMAP (unreal)
+                    b"015" | // RPL_MAP (ircu)
+                    b"016" | // RPL_MAPMORE (ircu)
+                    b"017" | // RPL_MAPEND/RPL_ENDMAP (ircu)
                     b"042" | // RPL_YOURID/RPL_YOURUUID
                     b"210" | // RPL_TRACERECONNECT (conflict: RPL_STATS/RPL_STATSHELP)
                     b"217" | // RPL_STATSQLINE (conflict: RPL_STATSPLINE)
@@ -58,10 +63,14 @@ impl<'msg> Command<'msg> {
                     b"233" | // RPL_SERVICE
                     b"246" | // RPL_STATSPING
                     b"250" | // RPL_STATSDLINE (conflict: RPL_STATSCONN)
+                    b"270" | // RPL_PRIVS (ircu) (conflict: RPL_MAPUSERS (inspircd old))
                     b"300" | // RPL_NONE
                     b"302" | // RPL_USERHOST
                     b"303" | // RPL_ISON
                     b"316" | // RPL_WHOISPRIVDEAF (conflict: RPL_WHOISCHANOP)
+                    b"357" | // RPL_MAP (austhex)
+                    b"358" | // RPL_MAPMORE (austhex)
+                    b"359" | // RPL_MAPEND/RPL_ENDMAP (austhex)
                     b"361" | // RPL_KILLDONE
                     b"362" | // RPL_CLOSING
                     b"363" | // RPL_CLOSEEND
@@ -74,12 +83,16 @@ impl<'msg> Command<'msg> {
                     b"606" | // RPL_WATCHLIST
                     b"607" | // RPL_ENDOFWATCHLIST
                     b"608" | // RPL_WATCHCLEAR/RPL_CLEARWATCH
+                    b"610" | // RPL_MAPMORE (unreal) (conflict: RPL_ISOPER (ultimate))
+                    b"615" | // RPL_MAPMORE (ptlink) (conflict: RPL_WHOISMODES (ultimate))
+                    b"623" | // RPL_MAPMORE (ultimate)
                     b"762"   // RPL_METADATAEND
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
                     b"002" | // RPL_YOURHOST/RPL_YOURHOSTIS
                     b"003" | // RPL_CREATED/RPL_SERVERCREATED
                     b"005" | // RPL_ISUPPORT/RPL_PROTOCTL (depreciated: RPL_BOUNCE moved to 010)
+                    b"018" | // RPL_MAPUSERS (inspircd)
                     b"105" | // RPL_REMOTEISUPPORT
                     b"203" | // RPL_TRACEUNKNOWN
                     b"221" | // RPL_UMODEIS
@@ -334,6 +347,7 @@ impl<'msg> Command<'msg> {
                 b"ETRACE000000" => return Ok(Self::Named("ETRACE")),
                 b"SERVLIST0000" => return Ok(Self::Named("SERVLIST")),
                 b"USERS0000000" => return Ok(Self::Named("USERS")),
+                b"MAP000000000" => return Ok(Self::Named("MAP")),
                 b"PASS00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
                                    else {return Ok(Self::Named("PASS"));},
                 b"NICK00000000" => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));}
@@ -514,6 +528,7 @@ mod const_tests {
         assert!(Command::parse(b"ETRACE", 0).is_ok());
         assert!(Command::parse(b"SERVLIST", 0).is_ok());
         assert!(Command::parse(b"USERS", 0).is_ok());
+        assert!(Command::parse(b"MAP", 0).is_ok());
         assert!(Command::parse(b"PASS", 1).is_ok());
         assert!(Command::parse(b"PASS", 0).is_err());
         assert!(Command::parse(b"NICK", 1).is_ok());

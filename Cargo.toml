@@ -1,6 +1,6 @@
 [package]
 name = "const_irc_message_parser"
-version = "0.7.1"
+version = "0.8.0"
 edition = "2021"
 rust-version = "1.71" # core::slice::split_at
 license = "ISC"

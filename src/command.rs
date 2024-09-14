@@ -52,273 +52,517 @@ impl<'msg> Command<'msg> {
                 match input {
                     b"006" | // RPL_MAP (unreal)
                     b"007" | // RPL_MAPEND/RPL_ENDMAP (unreal)
+                    b"008" | // RPL_SNOMASK/RPL_SNOMASKIS (ircu)
+                    b"009" | // RPL_STATMEMTOT (ircu)
+                    b"014" | // RPL_YOURCOOKIE
                     b"015" | // RPL_MAP (ircu)
                     b"016" | // RPL_MAPMORE (ircu)
                     b"017" | // RPL_MAPEND/RPL_ENDMAP (ircu)
-                    b"042" | // RPL_YOURID/RPL_YOURUUID
-                    b"210" | // RPL_TRACERECONNECT (conflict: RPL_STATS/RPL_STATSHELP)
-                    b"217" | // RPL_STATSQLINE (conflict: RPL_STATSPLINE)
-                    b"231" | // RPL_SERVICEINFO
-                    b"232" | // RPL_ENDOFSERVICES (conflict: RPL_RULES)
-                    b"233" | // RPL_SERVICE
-                    b"246" | // RPL_STATSPING
-                    b"250" | // RPL_STATSDLINE (conflict: RPL_STATSCONN)
-                    b"270" | // RPL_PRIVS (ircu) (conflict: RPL_MAPUSERS (inspircd old))
-                    b"300" | // RPL_NONE
-                    b"302" | // RPL_USERHOST
-                    b"303" | // RPL_ISON
-                    b"316" | // RPL_WHOISPRIVDEAF (conflict: RPL_WHOISCHANOP)
+                    b"030" | // RPL_APASSWARN_SET (ircu)
+                    b"031" | // RPL_APASSWARN_SECRET (ircu)
+                    b"032" | // RPL_APASSWARN_CLEAR (ircu)
+                    b"042" | // RPL_YOURID/RPL_YOURUUID (IRCnet/inspircd)
+                    b"050" | // RPL_ATTEMPTINGJUNC (aircd)
+                    b"051" | // RPL_ATTEMPTINGREROUTE (aircd)
+                    b"210" | // RPL_TRACERECONNECT (RFC2812) (conflicts: RPL_STATS (aircd) RPL_STATSHELP (unreal))
+                    b"217" | // RPL_STATSQLINE (RFC1459) (conflict: RPL_STATSPLINE (ircu))
+                    b"220" | // RPL_STATSPLINE (hybrid) (conflicts: RPL_STATSBLINE (bahamut, unreal) RPL_STATSWLINE (nefarious))
+                    b"222" | // RPL_MODLIST (conflicts: RPL_SQLINE_NICK (unreal) RPL_STATSBLINE (bahamut) RPL_STATSJLINE (ircu) RPL_CODEPAGE (rusnet-ircd))
+                    b"223" | // RPL_STATSELINE (bahamut) (conflicts: RPL_STATSGLINE (unreal) RPL_CHARSET (rusnet-ircd))
+                    b"224" | // RPL_STATSFLINE (hybrid, bahamut) (conflict: RPL_STATSTLINE (unreal))
+                    b"225" | // RPL_STATSDLINE (hybrid) (conflicts: RPL_STATSCLONE (bahamut) RPL_STATSELINE (unreal) (depreciated: RPL_STATSZLINE (bahamut)))
+                    b"226" | // RPL_STATSCOUNT (bahamut) (conflicts: RPL_STATSALINE (hybrid) RPL_STATSNLINE (unreal))
+                    b"227" | // RPL_STATSGLINE (bahamut) (conflicts: RPL_STATSVLINE (unreal) RPL_STATSBLINE (rizon))
+                    b"228" | // RPL_STATSQLINE (ircu) (conflicts: RPL_STATSBANVER (unreal) RPL_STATSCOUNT (oftc-hybrid))
+                    b"229" | // RPL_STATSSPAMF (unreal)
+                    b"230" | // RPL_STATSEXCEPTTKL (unreal)
+                    b"231" | // RPL_SERVICEINFO (RFC1459) depreciated
+                    b"232" | // RPL_ENDOFSERVICES (RFC1459) depreciated (conflict: RPL_RULES (unreal))
+                    b"233" | // RPL_SERVICE (RFC1459) depreciated
+                    b"236" | // RPL_STATSVERBOSE (ircu)
+                    b"237" | // RPL_STATSENGINE (ircu)
+                    b"238" | // RPL_STATSFLINE (ircu)
+                    b"239" | // RPL_STATSIAUTH (IRCnet)
+                    b"240" | // RPL_STATSVLINE (RFC2812) (conflict: RPL_STATSXLINE (austhex))
+                    b"245" | // RPL_STATSSLINE (bahamut) (conflict: RPL_STATSTLINE (hybrid?))
+                    b"246" | // RPL_STATSPING (RFC2812) (conflicts: RPL_STATSSERVICE (hybrid) RPL_STATSTLINE (ircu) RPL_STATSULINE (bahamut))
+                    b"247" | // RPL_STATSBLINE (RFC2812) (conflicts: RPL_STATSXLINE (unreal) RPL_STATSGLINE (ircu))
+                    b"248" | // RPL_STATSULINE (ircu) (conflict: RPL_STATSDEFINE (IRCnet))
+                    b"249" | // RPL_STATSDEBUG (hybrid) (conflict: RPL_STATSULINE)
+                    b"250" | // RPL_STATSDLINE (RFC2812) (conflict: RPL_STATSCONN (ircu))
+                    b"264" | // RPL_USINGSSL (rusnet-ircd)
+                    b"267" | // RPL_START_NETSTAT (aircd)
+                    b"268" | // RPL_NETSTAT (aircd)
+                    b"269" | // RPL_END_NETSTAT (aircd)
+                    b"270" | // RPL_PRIVS (ircu) (conflict & depreciated: RPL_MAPUSERS (inspircd old))
+                    b"273" | // RPL_NOTIFY (aircd)
+                    b"274" | // RPL_ENDNOTIFY (aircd) (conflict: RPL_STATSDELTA (IRCnet))
+                    b"275" | // RPL_STATSDLINE (ircu) (conflict: RPL_USINGSSL (bahamut))
+                    b"277" | // RPL_VCHANLIST (hybrid) depreciated
+                    b"278" | // RPL_VCHANHELP (hybrid) depreciated
+                    b"280" | // RPL_GLIST (ircu)
+                    b"283" | // RPL_ALIST (conflict: RPL_ENDOFJUPELIST (ircu))
+                    b"284" | // RPL_ENDOFALIST (conflict: RPL_FEATURE (ircu))
+                    b"285" | // RPL_GLIST_HASH (conflicts: RPL_CHANINFO_HANDLE (aircd) RPL_NEWHOSTIS (quakenet))
+                    b"286" | // RPL_CHANINFO_USERS (aircd) (conflict: RPL_CHKHEAD (quakenet))
+                    b"287" | // RPL_CHANINFO_CHOPS (aircd) (conflict: RPL_CHANUSER (quakenet))
+                    b"288" | // RPL_CHANINFO_VOICES (aircd) (conflict: RPL_PATCHHEAD (quakenet))
+                    b"289" | // RPL_CHANINFO_AWAY (aircd) (conflict: RPL_PATCHCON (quakenet))
+                    b"290" | // RPL_CHANINFO_OPERS (aircd) (conflicts: RPL_DATASTR (quakenet) RPL_HELPHDR (unreal))
+                    b"291" | // RPL_CHANINFO_BANNED (aircd) (conflicts: RPL_ENDOFCHECK (quakenet) RPL_HELPOP (unreal))
+                    b"292" | // RPL_CHANINFO_BANS (aircd) (conflicts: RPL_HELPTLR (unreal) ERR_SEARCHNOMATCH (nefarious))
+                    b"293" | // RPL_CHANINFO_INVITE (aircd) (conflict: RPL_HELPHLP (unreal))
+                    b"294" | // RPL_CHANINFO_INVITES (aircd) (conflict: RPL_HELPFWD (unreal))
+                    b"295" | // RPL_CHANINFO_KICK (aircd) (conflict: RPL_HELPIGN (unreal))
+                    b"296" | // RPL_CHANINFO_KICKS (aircd)
+                    b"299" | // RPL_END_CHANINFO (aircd)
+                    b"300" | // RPL_NONE (RFC1459)
+                    b"302" | // RPL_USERHOST (RFC1459)
+                    b"303" | // RPL_ISON (RFC1459)
+                    b"308" | // RPL_NOTIFYACTION (aircd) (conflicts: RPL_WHOISADMIN (bahamut) RPL_RULESSTART (unreal)/RPL_RULESTART (inspircd))
+                    b"309" | // RPL_NICKTRACE (aircd) (conflicts: RPL_WHOISSADMIN (bahamut) RPL_ENDOFRULES (unreal)/RPL_RULESEND (inspircd) RPL_WHOISHELPER (austhex) RPL_WHOISSERVICE (oftc-hybrid))
+                    b"310" | // RPL_WHOISSVCMSG (bahamut) (conflicts: RPL_WHOISHELPOP (unreal) RPL_WHOISSERVICE (austhex))
+                    b"316" | // RPL_WHOISPRIVDEAF (nefarious) (conflict & depreciated: RPL_WHOISCHANOP (RFC1459))
+                    b"326" | // RPL_NOCHANPASS
+                    b"327" | // RPL_CHPASSUNKNOWN (conflict: RPL_WHOISHOST (rusnet-ircd))
+                    b"328" | // RPL_CHANNEL_URL (bahamut)/RPL_CHANNELURL (charybdis)
+                    b"334" | // RPL_LISTUSAGE (ircu) (conflicts: RPL_COMMANDSYNTAX (bahamut) RPL_LISTSYNTAX (unreal))
+                    b"339" | // RPL_BADCHANPASS (conflict: RPL_WHOISMARKS (nefarious))
+                    b"343" | // RPL_WHOISKILL (nefarious) (conflict: RPL_WHOISOPERNAME (snircd))
+                    b"344" | // RPL_WHOISCOUNTRY (inspircd) (conflicts: RPL_REOPLIST (IRCnet) RPL_QUIETLIST (oftc-hybrid))
+                    b"345" | // RPL_INVITED (gamesurge)/RPL_ISSUEDINVITE (ircu) (conflicts: RPL_ENDOFREOPLIST (IRCnet) RPL_ENDOFQUIETLIST (oftc-hybrid))
+                    b"355" | // RPL_NAMREPLY_ (quakenet)/RPL_DELNAMREPLY (ircu)
                     b"357" | // RPL_MAP (austhex)
                     b"358" | // RPL_MAPMORE (austhex)
                     b"359" | // RPL_MAPEND/RPL_ENDMAP (austhex)
-                    b"361" | // RPL_KILLDONE
-                    b"362" | // RPL_CLOSING
-                    b"363" | // RPL_CLOSEEND
-                    b"373" | // RPL_INFOSTART
-                    b"383" | // RPL_YOURESERVICE
-                    b"384" | // RPL_MYPORTIS
-                    b"466" | // ERR_YOUWILLBEBANNED
-                    b"492" | // ERR_NOSERVICEHOST
-                    b"603" | // RPL_WATCHSTAT
-                    b"606" | // RPL_WATCHLIST
-                    b"607" | // RPL_ENDOFWATCHLIST
-                    b"608" | // RPL_WATCHCLEAR/RPL_CLEARWATCH
+                    b"360" | // RPL_WHOWASREAL (charybdis) depreciated
+                    b"361" | // RPL_KILLDONE (RFC1459)
+                    b"362" | // RPL_CLOSING (RFC1459)
+                    b"363" | // RPL_CLOSEEND (RFC1459)
+                    b"373" | // RPL_INFOSTART (RFC1459) depreciated
+                    b"377" | // RPL_KICKEXPIRED (aircd) (conflict & deprecated: RPL_SPAM (austhex))
+                    b"380" | // RPL_BANLINKED (aircd) (conflict: RPL_YOURHELPER (austhex))
+                    b"383" | // RPL_YOURESERVICE (RFC2812)
+                    b"384" | // RPL_MYPORTIS (RFC1459) depreciated
+                    b"385" | // RPL_NOTOPERANYMORE (austhex)
+                    b"386" | // RPL_QLIST (unreal) (conflicts: RPL_IRCOPS (ultimate) RPL_IRCOPSHEADER (nefarious) depreciated: RPL_RSACHALLENGE (hybrid))
+                    b"387" | // RPL_ENDOFQLIST (unreal) (conflicts: RPL_ENDOFIRCOPS (ultimate) RPL_IRCOPS (nefarious))
+                    b"388" | // RPL_ALIST (unreal) (conflict: RPL_ENDOFIRCOPS (nefarious))
+                    b"389" | // RPL_ENDOFALIST (unreal)
+                    b"398" | // RPL_STATSSLINE (snirc)
+                    b"399" | // RPL_USINGSLINE (snirc) (conflict: RPL_CLONES (inspircd))
+                    b"419" | // ERR_LENGTHTRUNCATED (aircd)
+                    b"425" | // ERR_NOOPERMOTD (unreal)
+                    b"429" | // ERR_TOOMANYAWAY (bahamut)
+                    b"430" | // ERR_EVENTNICKCHANGE (austhex)
+                    b"434" | // ERR_SERVICENAMEINUSE (austhex) (conflicts: ERR_NORULES (unreal) ERR_NONICKWHILEBAN (oftc-hybrid))
+                    b"435" | // ERR_SERVICECONFUSED (unreal) (conflict: ERR_BANONCHAN (bahamut)/ERR_BANNICKCHANGE (ratbox) depreciated: ERR_NICKONBAN (oftc-hybrid))
+                    b"438" | // ERR_NICKTOOFAST (ircu)/ERR_NCHANGETOOFAST (unreal) (conflict: ERR_DEAD (IRCnet))
+                    b"439" | // ERR_TARGETTOOFAST (ircu)/ERR_TARGETTOFAST/RPL_INVTOOFAST/RPL_MSGTOOFAST
+                    b"440" | // ERR_SERVICESDOWN (bahamut)/ERR_REG_UNAVAILABLE (ergo)
+                    b"447" | // ERR_NONICKCHANGE (unreal)/ERR_CANTCHANGENICK (inspircd)
+                    b"449" | // ERR_NOTIMPLEMENTED (undernet)
+                    b"452" | // ERR_IDCOLLISION
+                    b"453" | // ERR_NICKLOST
+                    b"455" | // ERR_HOSTILENAME (unreal)
+                    b"459" | // ERR_NOHIDING (unreal)
+                    b"460" | // ERR_NOTFORHALFOPS (unreal)
+                    b"466" | // ERR_YOUWILLBEBANNED (RFC1459) depreciated
+                    b"468" | // ERR_INVALIDUSERNAME (ircu) (conflicts: ERR_ONLYSERVERSCANCHANGE (bahamut) ERR_NOCODEPAGE (rusnet-ircd))
+                    b"469" | // ERR_LINKSET (unreal)
+                    b"470" | // ERR_LINKCHANNEL (unreal) (conflicts: ERR_KICKEDFROMCHAN (aircd) ERR_7BIT (rusnet-ircd))
+                    b"479" | // ERR_BADCHANNAME (hybrid) (conflicts: ERR_LINKFAIL (unreal) ERR_NOCOLOR (rusnet-ircd))
+                    b"480" | // ERR_NOULINE (austhex) (conflicts: ERR_CANNOTKNOCK (unreal) ERR_THROTTLE (ratbox)/ERR_NEEDTOWAIT (bahamut) ERR_NOWALLOP (rusnet-ircd) ERR_SSLONLYCHAN (oftc-hybrid))
+                    b"486" | // ERR_NONONREG (unreal)/ERR_ACCOUNTONLY (conflicts: ERR_RLINED (rusnet-ircd) depreciated: ERR_HTMDISABLED (unreal))
+                    b"487" | // ERR_CHANTOORECENT (IRCnet) (conflicts: ERR_MSGSERVICES (bahamut) ERR_NOTFORUSERS (unreal) ERR_NONONSSL (ChatIRCd))
+                    b"488" | // ERR_TSLESSCHAN (IRCnet) (conflicts: ERR_HTMDISABLED (unreal) ERR_NOSSL (bahamut))
+                    b"489" | // ERR_SECUREONLYCHAN (unreal)/ERR_SSLONLYCHAN (conflict: ERR_VOICENEEDED (undernet))
+                    b"490" | // ERR_ALLMUSTSSL (inspIRCd) (conflicts: ERR_NOSWEAR (unreal) ERR_MAXMSGSENT (bahamut))
+                    b"492" | // ERR_NOSERVICEHOST (RFC1459) depreciated (conflicts: ERR_NOCTCP (hybrid)/ERR_NOCTCPALLOWED (inspIRCd) ERR_CANNOTSENDTOUSER (charybdis))
+                    b"493" | // ERR_NOSHAREDCHAN (bahamut) (conflict: ERR_NOFEATURE (ircu))
+                    b"494" | // ERR_BADFEATVALUE (ircu) (conflict: ERR_OWNMODE (bahamut) ERR_INVITEREMOVED (inspIRCd))
+                    b"495" | // ERR_BADLOGTYPE (ircu) (conflict & depreciated: ERR_DELAYREJOIN (inspIRCd))
+                    b"496" | // ERR_BADLOGSYS (ircu)
+                    b"497" | // ERR_BADLOGVALUE (ircu)
+                    b"498" | // ERR_ISOPERLCHAN (ircu)
+                    b"499" | // ERR_CHANOWNPRIVNEEDED (unreal)
+                    b"500" | // ERR_TOOMANYJOINS (unreal) (conflicts: ERR_NOREHASHPARAM (rusnet-ircd) ERR_CANNOTSETMODDER (inspIRCd))
+                    b"504" | // ERR_USERNOTONSERV (conflict: ERR_LAST_ERR_MSG (bahamut))
+                    b"505" | // ERR_NOTINVITED (inspIRCd) (conflict & depreciated: ERR_LAST_ERR_MSG (oftc-hybrid))
+                    b"512" | // ERR_TOOMANYWATCH (bahamut)/ERR_NOTIFYFULL (aircd) (conflicts: ERR_NOSUCHGLINE (ircu) depreciated: ERR_NEEDPONG (oftc-hybrid))
+                    b"513" | // ERR_BADPING (ircu)/ERR_WRONGPONG (charybdis)/ERR_NEEDPONG (ultimate)
+                    b"514" | // ERR_TOOMANYDCC (bahamut) (conflicts: ERR_NOSUCHJUPE (ircu) depreciated: ERR_INVALID_ERROR (ircu))
+                    b"515" | // ERR_BADEXPIRE (ircu)
+                    b"516" | // ERR_DONTCHEAT (ircu)
+                    b"518" | // ERR_NOINVITE (unreal) (conflict: ERR_LONGMASK (ircu))
+                    b"519" | // ERR_ADMONLY (unreal) (conflict: ERR_TOOMANYUSERS (ircu))
+                    b"520" | // ERR_OPERONLY (unreal)/ERR_OPERONLYCHAN (hybrid)/ERR_CANTJOINOPERSONLY (inspIRCd) (conflicts: ERR_MASKTOOWIDE (ircu) depreciated: ERR_WHOTRUNC (austhex))
+                    b"521" | // ERR_LISTSYNTAX (bahamut) (conflict: ERR_NOSUCHGLINE (nefarious))
+                    b"522" | // ERR_WHOSYNTAX (bahamut)
+                    b"524" | // ERR_QUARANTINED (ircu) (conflicts: ERR_OPERSVERIFY (unreal) ERR_HELPNOTFOUND (hybrid))
+                    b"525" | // ERR_INVALIDKEY (ircu) (conflict & depreciated: ERR_REMOTEPFX)
+                    b"530" | // ERR_BADHOSTMASK (snircd)
+                    b"550" | // ERR_BADHOSTMASK (quakenet)
+                    b"551" | // ERR_HOSTUNAVAIL (quakenet)
+                    b"552" | // ERR_USINGSLINE (quakenet)
+                    b"553" | // ERR_STATSSLINE (quakenet)
+                    b"560" | // ERR_NOTLOWEROPLEVEL (ircu)
+                    b"561" | // ERR_NOTMANAGER (ircu)
+                    b"562" | // ERR_CHANSECURED (ircu)
+                    b"563" | // ERR_UPASSSET (ircu)
+                    b"564" | // ERR_UPASSNOTSET (ircu)
+                    b"565" | // ERR_NOMANAGER_LONG (ircu) depreciated
+                    b"566" | // ERR_NOMANAGER (ircu)
+                    b"567" | // ERR_UPASS_SAME_APASS (ircu)
+                    b"568" | // ERR_LASTERROR (ircu) (conflict: RPL_NOOMOTD (nefarious))
+                    b"573" | // ERR_CANNOTSENDRP (ergo)
+                    b"597" | // RPL_REAWAY (unreal)
+                    b"603" | // RPL_WATCHSTAT (unreal)
+                    b"606" | // RPL_WATCHLIST (unreal)
+                    b"607" | // RPL_ENDOFWATCHLIST (unreal)
+                    b"608" | // RPL_WATCHCLEAR (ultimate)/RPL_CLEARWATCH (unreal)
                     b"610" | // RPL_MAPMORE (unreal) (conflict: RPL_ISOPER (ultimate))
+                    b"611" | // RPL_ISLOCOP (ultimate)
+                    b"612" | // RPL_ISNOTOPER (ultimate)
+                    b"613" | // RPL_ENDOFISOPER (ultimate)
                     b"615" | // RPL_MAPMORE (ptlink) (conflict: RPL_WHOISMODES (ultimate))
+                    b"616" | // RPL_WHOISHOST (ultimate)
+                    b"617" | // RPL_WHOISSSLFP (nefarious) (conflicts: RPL_DCCSTATUS (bahamut) RPL_WHOISBOT (ultimate))
+                    b"618" | // RPL_DCCLIST (bahamut)
+                    b"619" | // RPL_ENDOFDCCLIST (bahamut) (conflict: RPL_WHOWASHOST (ultimate))
+                    b"620" | // RPL_DCCINFO (bahamut) (conflict: RPL_RULESSTART (ultimate))
+                    b"621" | // RPL_RULES (ultimate)
+                    b"622" | // RPL_ENDOFRULES (ultimate)
                     b"623" | // RPL_MAPMORE (ultimate)
-                    b"762"   // RPL_METADATAEND
+                    b"624" | // RPL_OMOTDSTART (ultimate)
+                    b"625" | // RPL_OMOTD (ultimate)
+                    b"626" | // RPL_ENDOFOMOTD (ultimate)
+                    b"630" | // RPL_SETTINGS (ultimate)
+                    b"631" | // RPL_ENDOFSETTINGS (ultimate)
+                    b"640" | // RPL_DUMPING (unreal) depreciated
+                    b"641" | // RPL_DUMPRPL (unreal) depreciated
+                    b"642" | // RPL_EODUMP (unreal) depreciated
+                    b"687" | // RPL_YOURLANGUAGESARE (ergo)
+                    b"727" | // RPL_TESTMASKGECOS (ratbox) (conflict: RPL_ISCAPTURED (oftc-hybrid))
+                    b"728" | // RPL_QUIETLIST (charybdis) (conflict: RPL_ISUNCAPTURED (ofc-hybrid))
+                    b"744" | // ERR_TOPICLOCK (inspIRCd)
+                    b"762" | // RPL_METADATAEND (IRCv3)
+                    b"771" | // RPL_XINFO (ithildin)
+                    b"773" | // RPL_XINFOSTART (ithildin)
+                    b"774" | // RPL_XINFOEND (ithildin)
+                    b"802" | // RPL_CHECK (inspIRCd)
+                    b"975" | // RPL_LOADEDMODULE (inspIRCd) (conflict: ERR_LASTERROR (nefarious))
+                    b"981" | // ERR_TOOMANYLANGUAGES (ergo)
+                    b"982" | // ERR_NOLANGUAGE (ergo)
+                    b"999"   // ERR_NUMERIC_ERR (bahamut)/ERR_NUMERICERR/ERR_LAST_ERR_MSG (depreciated: RPL_ENDOFDCCALLOWHELP (inspIRCd))
                     => if params_amount < 1 {return Err(CommandError::MinimumArgsRequired(1, cmd));},
                     b"001" | // RPL_WELCOME
                     b"002" | // RPL_YOURHOST/RPL_YOURHOSTIS
                     b"003" | // RPL_CREATED/RPL_SERVERCREATED
                     b"005" | // RPL_ISUPPORT/RPL_PROTOCTL (depreciated: RPL_BOUNCE moved to 010)
                     b"018" | // RPL_MAPUSERS (inspircd)
-                    b"105" | // RPL_REMOTEISUPPORT
-                    b"203" | // RPL_TRACEUNKNOWN
-                    b"221" | // RPL_UMODEIS
-                    b"242" | // RPL_STATSUPTIME
-                    b"251" | // RPL_LUSERCLIENT
-                    b"255" | // RPL_LUSERME
-                    b"256" | // RPL_ADMINME
-                    b"257" | // RPL_ADMINLOC1
-                    b"258" | // RPL_ADMINLOC2
-                    b"259" | // RPL_ADMINEMAIL
-                    b"265" | // RPL_LOCALUSERS
-                    b"266" | // RPL_GLOBALUSERS
-                    b"271" | // RPL_SILELIST
-                    b"272" | // RPL_ENDOFSILELIST
-                    b"281" | // RPL_ACCEPTLIST (conflict: RPL_ENDOFGLIST)
-                    b"282" | // RPL_ENDOFACCEPT (conflict: RPL_JUPELIST)
-                    b"304" | // RPL_TEXT
-                    b"305" | // RPL_UNAWAY
-                    b"306" | // RPL_NOWAWAY
-                    b"321" | // RPL_LISTSTART
-                    b"323" | // RPL_LISTEND
-                    b"336" | // RPL_INVITELIST (not 346)
-                    b"337" | // RPL_ENDOFINVITELIST (not 347)
-                    b"340" | // RPL_USERIP
-                    b"354" | // RPL_WHOSPCRPL
-                    b"371" | // RPL_INFO
-                    b"372" | // RPL_MOTD
-                    b"374" | // RPL_ENDOFINFO
-                    b"375" | // RPL_MOTDSTART
-                    b"376" | // RPL_ENDOFMOTD
-                    b"381" | // RPL_YOUREOPER
-                    b"392" | // RPL_USERSSTART
-                    b"393" | // RPL_USERS
-                    b"394" | // RPL_ENDOFUSERS
-                    b"395" | // RPL_NOUSERS
-                    b"406" | // ERR_WASNOSUCHNICK
-                    b"409" | // ERR_NOORIGIN
-                    b"410" | // ERR_INVALIDCAPCMD/ERR_INVALIDCAPSUBCOMMAND/ERR_UNKNOWNCAPCMD
-                    b"411" | // ERR_NORECIPIENT
-                    b"412" | // ERR_NOTEXTTOSEND
-                    b"417" | // ERR_INPUTTOOLONG
-                    b"422" | // ERR_NOMOTD
-                    b"424" | // ERR_FILEERROR
-                    b"431" | // ERR_NONICKNAMEGIVEN
-                    b"436" | // ERR_ERR_NICKCOLLISION
-                    b"445" | // ERR_SUMMONDISABLED
-                    b"446" | // ERR_USERSDISABLED
-                    b"451" | // ERR_NOTREGISTERED
+                    b"020" | // RPL_HELLO (rusnet-ircd)
+                    b"105" | // RPL_REMOTEISUPPORT (unreal)
+                    b"203" | // RPL_TRACEUNKNOWN (RFC1459)
+                    b"221" | // RPL_UMODEIS (RFC1459)
+                    b"242" | // RPL_STATSUPTIME (RFC1459)
+                    b"251" | // RPL_LUSERCLIENT (RFC1459)
+                    b"255" | // RPL_LUSERME (RFC1459)
+                    b"256" | // RPL_ADMINME (RFC1459)
+                    b"257" | // RPL_ADMINLOC1 (RFC1459)
+                    b"258" | // RPL_ADMINLOC2 (RFC1459)
+                    b"259" | // RPL_ADMINEMAIL (RFC1459)
+                    b"265" | // RPL_LOCALUSERS/RPL_CURRENT_LOCAL (bahamut)
+                    b"266" | // RPL_GLOBALUSERS/RPL_CURRENT_GLOBAL (bahamut)
+                    b"271" | // RPL_SILELIST (ircu)
+                    b"272" | // RPL_ENDOFSILELIST (ircu)
+                    b"281" | // RPL_ACCEPTLIST (conflict: RPL_ENDOFGLIST (ircu))
+                    b"282" | // RPL_ENDOFACCEPT (conflict: RPL_JUPELIST (ircu))
+                    b"304" | // RPL_TEXT (unreal)
+                    b"305" | // RPL_UNAWAY (RFC1459)
+                    b"306" | // RPL_NOWAWAY (RFC1459)
+                    b"321" | // RPL_LISTSTART (RFC1459) depreciated
+                    b"323" | // RPL_LISTEND (RFC1459)
+                    b"336" | // RPL_INVITELIST (hybrid not 346) (conflict: RPL_WHOISBOT (nefarious))
+                    b"337" | // RPL_ENDOFINVITELIST (hybrid not 347) (conflict: RPL_WHOISTEXT (older hybrid?))
+                    b"340" | // RPL_USERIP (ircu)
+                    b"354" | // RPL_WHOSPCRPL (ircu)/RPL_RWHOREPLY (bahamut)
+                    b"371" | // RPL_INFO (RFC1459)
+                    b"372" | // RPL_MOTD (RFC1459)
+                    b"374" | // RPL_ENDOFINFO (RFC1459)
+                    b"375" | // RPL_MOTDSTART (RFC1459)
+                    b"376" | // RPL_ENDOFMOTD (RFC1459)
+                    b"381" | // RPL_YOUREOPER (RFC1459)/RPL_YOUAREOPER (inspircd)
+                    b"392" | // RPL_USERSSTART (RFC1459)
+                    b"393" | // RPL_USERS (RFC1459)
+                    b"394" | // RPL_ENDOFUSERS (RFC1459)
+                    b"395" | // RPL_NOUSERS (RFC1459)
+                    b"406" | // ERR_WASNOSUCHNICK (RFC1459)
+                    b"409" | // ERR_NOORIGIN (RFC1459)
+                    b"410" | // ERR_INVALIDCAPCMD (undernet?)/ERR_INVALIDCAPSUBCOMMAND (inspircd)/ERR_UNKNOWNCAPCMD (ircu)
+                    b"411" | // ERR_NORECIPIENT (RFC1459)
+                    b"412" | // ERR_NOTEXTTOSEND (RFC1459)
+                    b"417" | // ERR_INPUTTOOLONG (ircu)
+                    b"420" | // ERR_AMBIGUOUSCOMMAND (inspircd)
+                    b"422" | // ERR_NOMOTD (RFC1459)
+                    b"424" | // ERR_FILEERROR (RFC1459)
+                    b"431" | // ERR_NONICKNAMEGIVEN (RFC1459)
+                    b"436" | // ERR_ERR_NICKCOLLISION (RFC1459)
+                    b"445" | // ERR_SUMMONDISABLED (RFC1459)
+                    b"446" | // ERR_USERSDISABLED (RFC1459)
+                    b"448" | // ERR_FORBIDDENCHANNEL (unreal)
+                    b"451" | // ERR_NOTREGISTERED (RFC1459)
                     b"456" | // ERR_ACCEPTFULL
-                    b"462" | // ERR_ALREADYREGISTERED
-                    b"463" | // ERR_NOPERMFORHOST
-                    b"464" | // ERR_PASSWDMISMATCH
-                    b"465" | // ERR_YOUREBANNEDCREEP
-                    b"476" | // ERR_BADCHANMASK
-                    b"481" | // ERR_NOPRIVILEGES
-                    b"483" | // ERR_CANTKILLSERVER
-                    b"484" | // ERR_RESTRICTED (conflicts: ERR_ISCHANSERVICE & ERR_DESYNC & ERR_ATTACKDENY)
-                    b"485" | // ERR_UNIQOPRIVSNEEDED (conflicts: ERR_KILLDENY & ERR_CANTKICKADMIN & ERR_ISREALSERVICE & ERR_CHANBANREASON)
-                    b"491" | // ERR_NOOPERHOST
-                    b"501" | // ERR_UMODEUNKOWNFLAG (conflict: ERR_UNKNOWNSNOMASK)
-                    b"502" | // ERR_USERSDONTMATCH
-                    b"511" | // ERR_SILELISTFULL
-                    b"670" | // RPL_STARTTLS
-                    b"691" | // ERR_STARTTLS
-                    b"716" | // RPL_TARGUMODEG
-                    b"717" | // RPL_TARGNOTIFY
-                    b"730" | // RPL_MONONLINE
-                    b"731" | // RPL_MONOFFLINE
-                    b"732" | // RPL_MONLIST
-                    b"733" | // RPL_ENDOFMONLIST
-                    b"759" | // RPL_ETRACEEND
-                    b"764" | // ERR_METADATALIMIT
-                    b"765" | // ERR_TARGETINVALID
-                    b"767" | // ERR_KEYINVALID
-                    b"902" | // ERR_NICKLOCKED
-                    b"903" | // RPL_SASLSUCCESS
-                    b"904" | // ERR_SASLFAIL
-                    b"905" | // ERR_SASLTOOLONG
-                    b"906" | // ERR_SASLABORTED
-                    b"907"   // ERR_SASLALREADY
+                    b"462" | // ERR_ALREADYREGISTERED (RFC1459)/ERR_ALREADYREGISTRED
+                    b"463" | // ERR_NOPERMFORHOST (RFC1459)
+                    b"464" | // ERR_PASSWDMISMATCH (RFC1459)
+                    b"465" | // ERR_YOUREBANNEDCREEP (RFC1459)
+                    b"481" | // ERR_NOPRIVILEGES (RFC1459)
+                    b"483" | // ERR_CANTKILLSERVER (RFC1459)/ERR_KILLDENY (unreal)
+                    b"484" | // ERR_RESTRICTED (RFC2812) (conflicts: ERR_ISCHANSERVICE (undernet) ERR_DESYNC (bahamut) ERR_ATTACKDENY (unreal))
+                    b"485" | // ERR_UNIQOPRIVSNEEDED (RFC2812) (conflicts: ERR_KILLDENY (unreal) ERR_CANTKICKADMIN (PTlink) ERR_ISREALSERVICE (quakenet) ERR_CHANBANREASON (hybrid) depreciated: ERR_BANNEDNICK (ratbox))
+                    b"491" | // ERR_NOOPERHOST (RFC1459)
+                    b"501" | // ERR_UMODEUNKOWNFLAG (RFC1459) (conflict: ERR_UNKNOWNSNOMASK (inspIRCd))
+                    b"502" | // ERR_USERSDONTMATCH (RFC1459)
+                    b"503" | // ERR_GHOSTEDCLIENT (hybrid) depreciated (conflict & depreciated: ERR_VWORLDWARN (austhex))
+                    b"511" | // ERR_SILELISTFULL (ircu)
+                    b"523" | // ERR_WHOLIMEXCEED (bahamut)
+                    b"526" | // ERR_PFXUNROUTABLE depreciated
+                    b"653" | // RPL_UNINVITED (inspIRCd)
+                    b"670" | // RPL_STARTTLS (IRCv3)
+                    b"672" | // RPL_UNKNOWNMODES (ithildin) (conflict: RPL_WHOISREALIP (rizon)/RPL_WHOISCGI (plexus))
+                    b"673" | // RPL_CANNOTSETMODES (ithildin)
+                    b"674" | // RPL_WHOISYOURID (ChatIRCd)
+                    b"690" | // ERR_REDIRECT (inspIRCd)
+                    b"691" | // ERR_STARTTLS (IRCv3)
+                    b"700" | // RPL_COMMANDS (inspIRCd)
+                    b"701" | // RPL_COMMANDSEND (inspIRCd)
+                    b"702" | // RPL_MODLIST (ratbox) (conflict & depreciated: RPL_COMMANDS (inspIRCd))
+                    b"703" | // RPL_ENDOFMODLIST (ratbox) (conflict & depreciated: RPL_COMMANDSEND (inspIRCd))
+                    b"715" | // ERR_KNOCKDISABLED (ratbox) (conflicts: ERR_TOOMANYINVITE (hybrid) RPL_INVITETHROTTLE (rizon))
+                    b"716" | // RPL_TARGUMODEG (ratbox)/ERR_TARGUMODEG
+                    b"717" | // RPL_TARGNOTIFY (ratbox)
+                    b"720" | // RPL_OMOTDSTART (ratbox)
+                    b"721" | // RPL_OMOTD (ratbox)
+                    b"722" | // RPL_ENDOFOMOTD (ratbox)
+                    b"730" | // RPL_MONONLINE (ratbox)
+                    b"731" | // RPL_MONOFFLINE (ratbox)
+                    b"732" | // RPL_MONLIST (ratbox)
+                    b"733" | // RPL_ENDOFMONLIST (ratbox)
+                    b"740" | // RPL_RSACHALLENGE2 (ratbox)
+                    b"741" | // RPL_ENDOFRSACHALLENGE2 (ratbox)
+                    b"750" | // RPL_SCANMATCHED (ratbox)
+                    b"759" | // RPL_ETRACEEND (irc2.11)
+                    b"764" | // ERR_METADATALIMIT (IRCv3)
+                    b"765" | // ERR_TARGETINVALID (IRCv3)
+                    b"767" | // ERR_KEYINVALID (IRCv3)
+                    b"902" | // ERR_NICKLOCKED (IRCv3)
+                    b"903" | // RPL_SASLSUCCESS (IRCv3)
+                    b"904" | // ERR_SASLFAIL (IRCv3)
+                    b"905" | // ERR_SASLTOOLONG (IRCv3)
+                    b"906" | // ERR_SASLABORTED (IRCv3)
+                    b"907" | // ERR_SASLALREADY (IRCv3)
+                    b"944" | // RPL_IDLETIMESET (inspIRCd)
+                    b"948" | // ERR_INVALIDIDLETIME (inspIRCd)
+                    b"961" | // RPL_PROPLIST (inspIRCd)
+                    b"990" | // RPL_DCCALLOWSTART (inspIRCd)
+                    b"992" | // RPL_DCCALLOWEND (inspIRCd)
+                    b"998"   // ERR_UNKNOWNDCCALLOWCMD (inspIRCd) (depreciated: RPL_DCCALLOWHELP (inspIRCd))
                     => if params_amount < 2 {return Err(CommandError::MinimumArgsRequired(2, cmd));},
-                    b"200" | // RPL_TRACELINK
-                    b"201" | // RPL_TRACECONNECTING
-                    b"202" | // RPL_TRACEHANDSHAKE
-                    b"204" | // RPL_TRACEOPERATOR
-                    b"205" | // RPL_TRACEUSER
-                    b"208" | // RPL_TRACENEWTYPE
-                    b"209" | // RPL_TRACECLASS
-                    b"212" | // RPL_STATSCOMMANDS
-                    b"219" | // RPL_ENDOFSTATS
-                    b"252" | // RPL_LUSEROP
-                    b"253" | // RPL_LUSERUNKNOWN
-                    b"254" | // RPL_LUSERCHANNELS
-                    b"261" | // RPL_TRACELOG
-                    b"263" | // RPL_TRYAGAIN
-                    b"276" | // RPL_WHOISCERTFP
-                    b"301" | // RPL_AWAY
-                    b"307" | // RPL_USERIP (conflicts: RPL_WHOISREGNICK & RPL_SUPERHOST)
-                    b"313" | // RPL_WHOISOPERATOR
-                    b"315" | // RPL_ENDOFWHO
-                    b"318" | // RPL_ENDOFWHOIS
-                    b"319" | // RPL_WHOISCHANNELS
-                    b"320" | // RPL_WHOISSPECIAL (conflicts: RPL_WHOIS_HIDDEN & RPL_WHOISVIRT)
-                    b"324" | // RPL_CHANNELMODEIS
-                    b"325" | // RPL_UNIQOPIS (conflicts: RPL_CHANNELPASSIS & RPL_WHOISWEBIRC & RPL_CHANNELMLOCK)
-                    b"329" | // RPL_CREATIONTIME
-                    b"331" | // RPL_NOTOPIC
-                    b"332" | // RPL_TOPIC
-                    b"333" | // RPL_TOPICWHOTIME
-                    b"335" | // RPL_WHOISBOT
-                    b"338" | // RPL_WHOISACTUALLY
-                    b"341" | // RPL_INVITING
-                    b"342" | // RPL_SUMMONING
-                    b"346" | // RPL_INVEXLIST (not 336)
-                    b"347" | // RPL_ENDOFINVEXLIST (not 337)
-                    b"348" | // RPL_EXCEPTLIST
-                    b"349" | // RPL_ENDOFEXCEPTLIST
-                    b"365" | // RPL_ENDOFLINKS
-                    b"366" | // RPL_ENDOFNAMES
-                    b"367" | // RPL_BANLIST
-                    b"368" | // RPL_ENDOFBANLIST
-                    b"369" | // RPL_ENDOFWHOWAS
-                    b"378" | // RPL_WHOISHOST
-                    b"379" | // RPL_WHOISMODES
-                    b"382" | // RPL_REHASHING
-                    b"391" | // RPL_TIME
-                    b"396" | // RPL_HOSTHIDDEN/RPL_VISIBLEHOST/RPL_YOURDISPLAYEDHOST
-                    b"400" | // ERR_UNKNOWNERROR
-                    b"401" | // ERR_NOSUCHNICK
-                    b"402" | // ERR_NOSUCHSERVER
-                    b"403" | // ERR_NOSUCHCHANNEL
-                    b"404" | // ERR_CANNOTSENDTOCHAN
-                    b"405" | // ERR_TOOMANYCHANNELS
-                    b"407" | // ERR_TOOMANYTARGETS
-                    b"408" | // ERR_NOSUCHSERVICE (conflicts: ERR_NOCOLORSONCHAN & ERR_NOCTRLSONCHAN)
-                    b"413" | // ERR_NOTPLEVEL
-                    b"414" | // ERR_WILDTOPLEVEL
-                    b"415" | // ERR_BADMASK
-                    b"421" | // ERR_UNKNOWNCOMMAND
-                    b"423" | // ERR_NOADMININFO
-                    b"432" | // ERR_ERRONEUSNICKNAME
-                    b"433" | // ERR_NICKNAMEINUSE
-                    b"437" | // ERR_UNAVAILRESOURCE (conflict: ERR_BANNICKCHANGE)
-                    b"442" | // ERR_NOTONCHANNEL
-                    b"444" | // ERR_NOLOGIN
+                    b"043" | // RPL_SAVENICK (IRCnet)
+                    b"200" | // RPL_TRACELINK (RFC1459)
+                    b"201" | // RPL_TRACECONNECTING (RFC1459)
+                    b"202" | // RPL_TRACEHANDSHAKE (RFC1459)
+                    b"204" | // RPL_TRACEOPERATOR (RFC1459)
+                    b"205" | // RPL_TRACEUSER (RFC1459)
+                    b"208" | // RPL_TRACENEWTYPE (RFC1459)
+                    b"209" | // RPL_TRACECLASS (RFC2812)
+                    b"212" | // RPL_STATSCOMMANDS (RFC1459)
+                    b"219" | // RPL_ENDOFSTATS (RFC1459)
+                    b"252" | // RPL_LUSEROP (RFC1459)
+                    b"253" | // RPL_LUSERUNKNOWN (RFC1459)
+                    b"254" | // RPL_LUSERCHANNELS (RFC1459)
+                    b"261" | // RPL_TRACELOG (RFC1459)
+                    b"263" | // RPL_TRYAGAIN/RPL_LOAD2HI/RPL_LOAD_THROTTLED (RFC2812)
+                    b"276" | // RPL_WHOISCERTFP (oftc-hybrid) (conflicts: RPL_STATSRLINE (ircu) depreciated: RPL_VCHANEXIST (hybrid))
+                    b"301" | // RPL_AWAY (RFC1459)
+                    b"307" | // RPL_USERIP (conflicts: RPL_WHOISREGNICK (bahamut) RPL_SUPERHOST (austhex))
+                    b"313" | // RPL_WHOISOPERATOR (RFC1459)
+                    b"315" | // RPL_ENDOFWHO (RFC1459)
+                    b"318" | // RPL_ENDOFWHOIS (RFC1459)
+                    b"319" | // RPL_WHOISCHANNELS (RFC1459)
+                    b"320" | // RPL_WHOISSPECIAL (unreal) (conflicts: RPL_WHOIS_HIDDEN (anothernet) RPL_WHOISVIRT (austhex))
+                    b"324" | // RPL_CHANNELMODEIS (RFC1459)
+                    b"325" | // RPL_UNIQOPIS (RFC2812) (conflicts: RPL_CHANNELPASSIS RPL_WHOISWEBIRC (nefarious) depreciated: RPL_CHANNELMLOCKIS/RPL_CHANNELMLOCK (sorircd))
+                    b"329" | // RPL_CREATIONTIME (bahamut)/RPL_CHANNELCREATED (inspircd)
+                    b"331" | // RPL_NOTOPIC (RFC1459)/RPL_NOTOPICSET (inspircd)
+                    b"332" | // RPL_TOPIC (RFC1459)/RPL_TOPICSET (inspircd)
+                    b"333" | // RPL_TOPICWHOTIME (ircu)/RPL_TOPICTIME (inspircd)
+                    b"335" | // RPL_WHOISBOT (unreal) (conflicts: RPL_WHOISTEXT (hybrid) RPL_WHOISACCOUNTONLY (nefarious))
+                    b"338" | // RPL_WHOISACTUALLY (ircu) (conflict: RPL_CHANPASSOK)
+                    b"341" | // RPL_INVITING (RFC1459)
+                    b"342" | // RPL_SUMMONING (RFC1459) depreciated
+                    b"346" | // RPL_INVITELIST (RFC2812 not 336)/RPL_INVEXLIST (hybrid)
+                    b"347" | // RPL_ENDOFINVITELIST (RFC2812 not 337)/RPL_ENDOFINVEXLIST (hybrid)
+                    b"348" | // RPL_EXCEPTLIST (RFC2812)/RPL_EXLIST (unreal)/RPL_EXEMPTLIST (bahamut)
+                    b"349" | // RPL_ENDOFEXCEPTLIST (RFC2812)/RPL_ENDOFEXLIST (unreal)/RPL_ENDOFEXEMPTLIST (bahamut)
+                    b"365" | // RPL_ENDOFLINKS (RFC1459)
+                    b"366" | // RPL_ENDOFNAMES (RFC1459)
+                    b"367" | // RPL_BANLIST (RFC1459)
+                    b"368" | // RPL_ENDOFBANLIST (RFC1459)
+                    b"369" | // RPL_ENDOFWHOWAS (RFC1459)
+                    b"378" | // RPL_BANEXPIRED (aircd) (conflicts: RPL_WHOISHOST (unreal) depreciated: RPL_MOTD (austhex))
+                    b"379" | // RPL_KICKLINKED (aircd) (conflicts: RPL_WHOISMODES (unreal) depreciated: RPL_WHOWASIP (inspircd))
+                    b"382" | // RPL_REHASHING (RFC1459)
+                    b"391" | // RPL_TIME (RFC1459)
+                    b"396" | // RPL_HOSTHIDDEN (unreal)/RPL_VISIBLEHOST (hybrid)/RPL_YOURDISPLAYEDHOST (inspircd)
+                    b"400" | // ERR_UNKNOWNERROR (ergo) (conflict & depreciated: ERR_FIRSTERROR (ircu))
+                    b"401" | // ERR_NOSUCHNICK (RFC1459)
+                    b"402" | // ERR_NOSUCHSERVER (RFC1459)
+                    b"403" | // ERR_NOSUCHCHANNEL (RFC1459)
+                    b"404" | // ERR_CANNOTSENDTOCHAN (RFC1459)
+                    b"405" | // ERR_TOOMANYCHANNELS (RFC1459)
+                    b"407" | // ERR_TOOMANYTARGETS (RFC1459)
+                    b"408" | // ERR_NOSUCHSERVICE (RFC2812) (conflicts: ERR_NOCOLORSONCHAN (bahamut) ERR_NOCTRLSONCHAN (hybrid) ERR_SEARCHNOMATCH (snircd))
+                    b"413" | // ERR_NOTPLEVEL (RFC1459)
+                    b"414" | // ERR_WILDTOPLEVEL (RFC1459)
+                    b"415" | // ERR_BADMASK (RFC2812) (conflict: ERR_MSGNEEDREGGEDNICK (solanum)/ERR_CANTSENDREGONLY (oftc-hybrid))
+                    b"416" | // ERR_TOOMANYMATCHES (IRCnet)/ERR_QUERYTOOLONG (ircu)
+                    b"421" | // ERR_UNKNOWNCOMMAND (RFC1459)
+                    b"423" | // ERR_NOADMININFO (RFC1459)
+                    b"432" | // ERR_ERRONEUSNICKNAME (RFC1459)
+                    b"433" | // ERR_NICKNAMEINUSE (RFC1459)
+                    b"437" | // ERR_UNAVAILRESOURCE (RFC2812) (conflict: ERR_BANNICKCHANGE (ircu))
+                    b"442" | // ERR_NOTONCHANNEL (RFC1459)
+                    b"444" | // ERR_NOLOGIN (RFC1459)
                     b"457" | // ERR_ACCEPTEXIST
                     b"458" | // ERR_ACCEPTNOT
-                    b"461" | // ERR_NEEDMOREPARAMS
-                    b"467" | // ERR_KEYSET
-                    b"471" | // ERR_CHANNELISFULL
-                    b"472" | // ERR_UNKNOWNMODE
-                    b"473" | // ERR_INVITEONLYCHAN
-                    b"474" | // ERR_BANNEDFROMCHAN
-                    b"475" | // ERR_BADCHANNELKEY
-                    b"477" | // ERR_NOCHANMODES/ERR_MODELESS (conflict: ERR_NEEDREGGEDNICK)
-                    b"478" | // ERR_BANLISTFULL
-                    b"482" | // ERR_CHANOPRIVSNEEDED
-                    b"524" | // ERR_HELPNOTFOUND
-                    b"525" | // ERR_INVALIDKEY
-                    b"671" | // RPL_WHOISSECURE
-                    b"704" | // RPL_HELPSTART
-                    b"705" | // RPL_HELPTXT
-                    b"706" | // RPL_ENDOFHELP
-                    b"710" | // RPL_KNOCK
-                    b"711" | // RPL_KNOCKDLVR
-                    b"712" | // ERR_TOOMANYKNOCK
-                    b"713" | // ERR_CHANOPEN
-                    b"714" | // ERR_KNOCKONCHAN
-                    b"718" | // RPL_UMODEGMSG
-                    b"723" | // ERR_NOPRIVS
-                    b"761" | // RPL_KEYVALUE
-                    b"766" | // ERR_NOMATCHINGKEY
-                    b"768" | // ERR_KEYNOTSET
-                    b"769" | // ERR_KEYNOPERMISSION
-                    b"901" | // RPL_LOGGEDOUT
-                    b"908" | // RPL_SASLMECHS
-                    b"950" | // RPL_UNSILENCED
-                    b"951" | // RPL_SILENCED
-                    b"952"   // ERR_SILENCE
+                    b"461" | // ERR_NEEDMOREPARAMS (RFC1459)
+                    b"467" | // ERR_KEYSET (RFC1459)
+                    b"471" | // ERR_CHANNELISFULL (RFC1459)
+                    b"472" | // ERR_UNKNOWNMODE (RFC1459)
+                    b"473" | // ERR_INVITEONLYCHAN (RFC1459)
+                    b"474" | // ERR_BANNEDFROMCHAN (RFC1459)
+                    b"475" | // ERR_BADCHANNELKEY (RFC1459)
+                    b"476" | // ERR_BADCHANMASK (RFC2812) (conflict: ERR_OPERONLYCHAN (plexus))
+                    b"477" | // ERR_NOCHANMODES (RFC2812)/ERR_MODELESS (conflict: ERR_NEEDREGGEDNICK (bahamut)/ERR_REGONLYCHAN (oftc-hybrid))
+                    b"478" | // ERR_BANLISTFULL (RFC2812)
+                    b"482" | // ERR_CHANOPRIVSNEEDED (RFC1459)
+                    b"517" | // ERR_DISABLED (ircu)
+                    b"531" | // ERR_CANTSENDTOUSER (inspIRCd)/ERR_HOSTUNAVAIL (snircd)
+                    b"650" | // RPL_SYNTAX (inspIRCd)
+                    b"651" | // RPL_CHANNELMSG (inspIRCd)
+                    b"652" | // RPL_WHOWASIP (inspIRCd)
+                    b"659" | // RPL_SPAMCMDFWD (unreal)
+                    b"671" | // RPL_WHOISSECURE (unreal)/RPL_WOISSSL (nefarious)
+                    b"704" | // RPL_HELPSTART (ratbox)
+                    b"705" | // RPL_HELPTXT (ratbox)
+                    b"706" | // RPL_ENDOFHELP (ratbox)
+                    b"707" | // ERR_TARGCHANGE (ratbox)
+                    b"710" | // RPL_KNOCK (ratbox)
+                    b"711" | // RPL_KNOCKDLVR (ratbox)
+                    b"712" | // ERR_TOOMANYKNOCK (ratbox)
+                    b"713" | // ERR_CHANOPEN (ratbox)
+                    b"714" | // ERR_KNOCKONCHAN (ratbox)
+                    b"718" | // RPL_UMODEGMSG (ratbox)
+                    b"723" | // ERR_NOPRIVS (ratbox)
+                    b"726" | // RPL_NOTESTLINE (ratbox)
+                    b"761" | // RPL_KEYVALUE (IRCv3)
+                    b"766" | // ERR_NOMATCHINGKEY (IRCv3)
+                    b"768" | // ERR_KEYNOTSET (IRCv3)
+                    b"769" | // ERR_KEYNOPERMISSION (IRCv3)
+                    b"801" | // RPL_STATSCOUNTRY (inspIRCd)
+                    b"901" | // RPL_LOGGEDOUT (IRCv3)
+                    b"908" | // RPL_SASLMECHS (IRCv3)
+                    b"910" | // RPL_ACCESSLIST (inspIRCd)
+                    b"911" | // RPL_ENDOFACCESSLIST (inspIRCd)
+                    b"926" | // ERR_BADCHANNEL (inspIRCd)
+                    b"937" | // ERR_ALREADYCHANFILTERED (inspIRCd) depreciated
+                    b"938" | // ERR_NOSUCHCHANFILTER (inspIRCd) depreciated
+                    b"939" | // ERR_CHANFILTERFULL (inspIRCd) depreciated
+                    b"940" | // RPL_ENDOFSPAMFILTER (inspIRCd)
+                    b"942" | // ERR_INVALIDWATCHNICK (inspIRCd)
+                    b"945" | // RPL_NICKLOCKOFF (inspIRCd)
+                    b"946" | // ERR_NICKNOTLOCKED (inspIRCd)
+                    b"947" | // RPL_NICKLOCKON (inspIRCd)
+                    b"950" | // RPL_UNSILENCED (inspIRCd)
+                    b"951" | // RPL_SILENCED (inspIRCd)
+                    b"952" | // ERR_SILENCE (inspIRCd)
+                    b"953" | // RPL_ENDOFEXEMPTIONLIST (inspIRCd)
+                    b"960" | // RPL_ENDOFPROPLIST (inspIRCd)
+                    b"972" | // ERR_CANNOTDOCOMMAND (unreal) (conflict: ERR_CANTUNLOADMODULE (inspIRCd))
+                    b"973" | // RPL_UNLOADEDMODULE (inspIRCd)
+                    b"974" | // RPL_CANNOTCHANGECHANMODE (unreal) (conflict: ERR_CANTLOADMODULE (inspIRCd))
+                    b"988" | // RPL_SERVLOCKON (inspIRCd)
+                    b"989" | // RPL_SERVLOCKOFF (inspIRCd)
+                    b"991" | // RPL_DCCALLOWLIST (inspIRCd)
+                    b"993" | // RPL_DCCALLOWTIMED (inspIRCd)
+                    b"994" | // RPL_DCCALLOWPERMANENT (inspIRCd)
+                    b"995" | // RPL_DCCALLOWREMOVED (inspIRCd)
+                    b"996" | // ERR_DCCALLOWINVALID (inspIRCd)
+                    b"997"   // RPL_DCCALLOWEXPIRED (inspIRCd)
                     => if params_amount < 3 {return Err(CommandError::MinimumArgsRequired(3, cmd));},
-                    b"010" | // RPL_BOUNCE/RPL_REDIR (depreciated: RPL_STATMEM)
-                    b"235" | // RPL_SERVLISTEND
-                    b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE (conflict: RPL_TRACEPING)
-                    b"312" | // RPL_WHOISSERVER
-                    b"322" | // RPL_LIST
-                    b"330" | // RPL_WHOISACCOUNT
-                    b"351" | // RPL_VERSION
-                    b"353" | // RPL_NAMREPLY
-                    b"364" | // RPL_LINKS
-                    b"441" | // ERR_USERNOTINCHANNEL
-                    b"443" | // ERR_USERONCHANNEL
-                    b"734" | // ERR_MONLISTFULL
-                    b"760" | // RPL_WHOISKEYVALUE
-                    b"900"   // RPL_LOGGEDIN
+                    b"010" | // RPL_BOUNCE/RPL_REDIR (depreciated & conflict: RPL_STATMEM (ircu))
+                    b"235" | // RPL_SERVLISTEND (RFC2812)
+                    b"262" | // RPL_TRACEEND/RPL_ENDOFTRACE (RFC2812) (conflict: RPL_TRACEPING)
+                    b"312" | // RPL_WHOISSERVER (RFC1459)
+                    b"322" | // RPL_LIST (RFC1459)
+                    b"330" | // RPL_WHOISACCOUNT (ircu)/RPL_WHOISLOGGEDIN (conflict: RPL_WHOWAS_TIME)
+                    b"350" | // RPL_WHOISGATEWAY (inspircd)
+                    b"351" | // RPL_VERSION (RFC1459)
+                    b"353" | // RPL_NAMREPLY (RFC1459)
+                    b"364" | // RPL_LINKS (RFC1459)
+                    b"441" | // ERR_USERNOTINCHANNEL (RFC1459)
+                    b"443" | // ERR_USERONCHANNEL (RFC1459)
+                    b"569" | // RPL_WHOISASN (inspIRCd)
+                    b"729" | // RPL_ENDOFQUIETLIST (charybdis)
+                    b"734" | // ERR_MONLISTFULL (ratbox)
+                    b"742" | // ERR_MLOCKRESTRICTED (charybdis)
+                    b"743" | // ERR_INVALIDBAN (charybdis)
+                    b"760" | // RPL_WHOISKEYVALUE (IRCv3)
+                    b"803" | // RPL_OTHERUMODEIS (inspIRCd)
+                    b"804" | // RPL_OTHERSNOMASKIS (inspIRCd)
+                    b"900" | // RPL_LOGGEDIN (IRCv3)
+                    b"936"   // ERR_WORDFILTERED (inspIRCd) depreciated
                     => if params_amount < 4 {return Err(CommandError::MinimumArgsRequired(4, cmd));},
                     b"004" | // RPL_MYINFO/RPL_SERVERVERSION
-                    b"206" | // RPL_TRACESERVER
-                    b"207" | // RPL_TRACESERVICE
-                    b"244" | // RPL_STATSHLINE
-                    b"317" | // RPL_WHOISIDLE
-                    b"598" | // RPL_GONEAWAY
-                    b"599" | // RPL_NOTAWAY
-                    b"600" | // RPL_LOGON
-                    b"601" | // RPL_LOGOFF
-                    b"602" | // RPL_WATCHOFF
-                    b"604" | // RPL_NOWON
-                    b"605" | // RPL_NOWOFF
-                    b"609" | // RPL_NOWISAWAY
-                    b"696"   // ERR_INVALIDMODEPARAM
+                    b"206" | // RPL_TRACESERVER (RFC1459)
+                    b"207" | // RPL_TRACESERVICE (RFC2812) (conflict: RPL_TRACECAPTURED (oftc-hybrid))
+                    b"244" | // RPL_STATSHLINE (RFC1459)
+                    b"317" | // RPL_WHOISIDLE (RFC1459)
+                    b"598" | // RPL_GONEAWAY (unreal)
+                    b"599" | // RPL_NOTAWAY (unreal)
+                    b"600" | // RPL_LOGON (unreal)
+                    b"601" | // RPL_LOGOFF (unreal)
+                    b"602" | // RPL_WATCHOFF (unreal)
+                    b"604" | // RPL_NOWON (unreal)
+                    b"605" | // RPL_NOWOFF (unreal)
+                    b"609" | // RPL_NOWISAWAY (unreal)
+                    b"696" | // ERR_INVALIDMODEPARAM (inspIRCd)
+                    b"697" | // ERR_LISTMODEALREADYSET (inspIRCd)
+                    b"698" | // ERR_LISTMODENOTSET (inspIRCd)
+                    b"724" | // RPL_TESTMASK (ratbox)
+                    b"725" | // RPL_TESTLINE (ratbox)
+                    b"941" | // RPL_SPAMFILTER (inspIRCd)
+                    b"954"   // RPL_EXEMPTIONLIST (inspIRCd)
                     => if params_amount < 5 {return Err(CommandError::MinimumArgsRequired(5, cmd));},
-                    b"218" | // RPL_STATSYLINE
-                    b"241" | // RPL_STATSLLINE
-                    b"243" | // RPL_STATSOLINE
-                    b"311" | // RPL_WHOISUSER
-                    b"314"   // RPL_WHOWASUSER
+                    b"218" | // RPL_STATSYLINE (RFC1459)
+                    b"241" | // RPL_STATSLLINE (RFC1459)
+                    b"243" | // RPL_STATSOLINE (RFC1459)
+                    b"311" | // RPL_WHOISUSER (RFC1459)
+                    b"314"   // RPL_WHOWASUSER (RFC1459)
                     => if params_amount < 6 {return Err(CommandError::MinimumArgsRequired(6, cmd));},
-                    b"213" | // RPL_STATSCLINE
-                    b"214" | // RPL_STATSNLINE (conflict: RPL_STATSOLDNLINE)
-                    b"215" | // RPL_STATSILINE
-                    b"216" | // RPL_STATSKLINE
-                    b"234" | // RPL_SERVLIST
-                    b"709"   // RPL_ETRACE
+                    b"213" | // RPL_STATSCLINE (RFC1459)
+                    b"214" | // RPL_STATSNLINE (RFC1459)/RPL_STATSOLDNLINE (ircu, unreal)
+                    b"215" | // RPL_STATSILINE (RFC1459)
+                    b"216" | // RPL_STATSKLINE (RFC1459)
+                    b"234" | // RPL_SERVLIST (RFC2812)
+                    b"709" | // RPL_ETRACE (ratbox)
+                    b"751"   // RPL_SCANUMODES (ratbox)
                     => if params_amount < 7 {return Err(CommandError::MinimumArgsRequired(7, cmd));},
-                    b"211" | // RPL_STATSLINKINFO
-                    b"352" | // RPL_WHOREPLY
-                    b"708"   // RPL_ETRACEFULL
+                    b"211" | // RPL_STATSLINKINFO (RFC1459)
+                    b"352" | // RPL_WHOREPLY (RFC1459)
+                    b"708"   // RPL_ETRACEFULL (ratbox)
                     => if params_amount < 8 {return Err(CommandError::MinimumArgsRequired(8, cmd));},
                     _ => unhandled = true,
                 }

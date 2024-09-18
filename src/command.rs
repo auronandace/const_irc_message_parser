@@ -750,7 +750,7 @@ mod const_tests {
         assert!(Command::parse(b"709", 7).is_ok());
         assert!(Command::parse(b"352", 8).is_ok());
         assert!(Command::parse(b"3027", 1).is_err());
-        assert!(Command::parse(b"999", 1).is_err());
+        assert!(Command::parse(b"000", 1).is_err());
         assert!(Command::parse(b"info", 0).is_ok());
         assert!(Command::parse(b"LuSeRS", 0).is_ok());
         assert!(Command::parse(b"REHASH", 0).is_ok());

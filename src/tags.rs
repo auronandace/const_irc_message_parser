@@ -22,11 +22,14 @@ pub struct Tags<'msg> {
 impl<'msg> Tags<'msg> {
     /// Generates [`Tags`] from a slice of bytes.
     ///
+    /// While the [Message Tag Specification] does specify the valid bytes for the key name it also
+    /// states that it must be treated as an opaque identifier that should not be validated.
+    ///
     /// # Errors
     ///
     /// Will return `Err` if the input is empty, only contains the leading `@`, doesn't start
-    /// with the leading `@`, or contains non-utf8 bytes. It will also return `Err` if the
-    /// `key_name` or `escaped_value` of any [`Tag`] contains invalid bytes as per the [Message Tag Specification].
+    /// with the leading `@`, contains non-utf8 bytes, the `key_name` is missing or the `escaped_value` of
+    /// any [`Tag`] contains invalid bytes as per the [Message Tag Specification].
     ///
     /// [Message Tag Specification]: <https://ircv3.net/specs/extensions/message-tags.html>
     pub const fn parse(input: &'msg [u8]) -> Result<Self, TagsError> {

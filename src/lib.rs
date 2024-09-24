@@ -37,6 +37,7 @@ pub mod command;
 pub mod parameters;
 pub mod formatting;
 pub mod isupport;
+pub mod casemapping;
 
 /// A single IRC Message created from a slice of bytes.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

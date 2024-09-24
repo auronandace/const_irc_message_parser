@@ -1,6 +1,6 @@
 [package]
 name = "const_irc_message_parser"
-version = "0.8.0"
+version = "0.9.0"
 edition = "2021"
 rust-version = "1.74" # supporting clippy lints section in Cargo.toml
 license = "ISC"

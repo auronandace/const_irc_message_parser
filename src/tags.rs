@@ -38,35 +38,22 @@ impl<'msg> Tags<'msg> {
             Ok(content) => {
                 let mut amount = 0;
                 let end_of_tags = input.len() - 1;
-                let mut tag_start = 1;
-                let (mut vendor_detected, mut key_name_started, mut escaped_value_started) = (false, false, false);
+                let mut escaped_value_started = false;
+                let mut previous_semicolon = true;
                 let mut index = 0;
                 while index < input.len() {
-                    if input[index] == b'/' {
-                        if vendor_detected {
-                            vendor_detected = false;
-                            key_name_started = true;
-                        } else {
-                            vendor_detected = true;
-                            index = tag_start - 1;
-                        }
-                    } else if input[index] == b';' || index == end_of_tags {
-                        if key_name_started || escaped_value_started {
-                            amount += 1;
-                            key_name_started = false;
-                            escaped_value_started = false;
-                            tag_start = index + 1;
-                        } else {
-                            key_name_started = true;
-                            index = tag_start - 1;
-                        }
-                    } else if input[index] == b'=' && key_name_started {
-                        key_name_started = false;
+                    if input[index] == b';' || index == end_of_tags {
+                        if previous_semicolon {return Err(TagsError::EmptyKeyName);}
+                        previous_semicolon = true;
+                        amount += 1;
+                        escaped_value_started = false;
+                    } else if input[index] == b'=' && !escaped_value_started {
                         escaped_value_started = true;
-                    } else if key_name_started && is_invalid_key_name_byte(input[index]) {
-                        return Err(TagsError::InvalidKeyNameByte(input[index]));
+                        previous_semicolon = false;
                     } else if escaped_value_started && is_invalid_escaped_value_byte(input[index]) {
                         return Err(TagsError::InvalidEscapedValueByte(input[index]));
+                    } else {
+                        previous_semicolon = false;
                     }
                     index += 1;
                 }
@@ -229,10 +216,6 @@ const fn is_invalid_escaped_value_byte(input: u8) -> bool {
     }
 }
 
-const fn is_invalid_key_name_byte(input: u8) -> bool {
-    !input.is_ascii_alphanumeric() && input != b'-'
-}
-
 /// The possible types of errors when parsing [`Tags`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum TagsError {
@@ -244,8 +227,8 @@ pub enum TagsError {
     TagBytesExceededBy(usize),
     /// No bytes after the initial `@`.
     NoTags,
-    /// Use of an invalid byte in the key name.
-    InvalidKeyNameByte(u8),
+    /// No key name detected before `;` or end of tags.
+    EmptyKeyName,
     /// Use of an invalid byte in the escaped value.
     InvalidEscapedValueByte(u8),
     /// A part of the [`Tags`] contains non-utf8 bytes.
@@ -260,7 +243,7 @@ mod const_tests {
     const fn parsing_tags() {
         assert!(Tags::parse(b"@aaa=bbb;ccc;example.com/ddd=eee").is_ok());
         assert!(Tags::parse(b"@aaa=bbb;ccc;example.com/ddd=").is_ok());
-        assert!(Tags::parse(b"@aaa=bbb;c@c;example.com/ddd=eee").is_err());
+        assert!(Tags::parse(b"@aaa=bbb;;example.com/ddd=").is_err());
         assert!(Tags::parse(b"@aaa=b\0b;ccc;example.com/ddd=eee").is_err());
         assert!(Tags::parse(b"").is_err());
         assert!(Tags::parse(&[b'@', 0, 159, 146, 150]).is_err());

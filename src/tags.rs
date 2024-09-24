@@ -108,7 +108,7 @@ impl<'msg> Tags<'msg> {
             if current_tag == target_index {
                 if bytes[index] == b'+' {
                     tag.client_prefix = true;
-                } else if bytes[index] == b'/' {
+                } else if bytes[index] == b'/' && tag.vendor.is_none() {
                     if tag.client_prefix {
                         (_, copy) = bytes.split_at(current_tag_start + 1);
                         offset = current_tag_start + 1;

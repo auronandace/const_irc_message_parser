@@ -161,7 +161,7 @@ impl<'msg> Tags<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Tags<'msg> {
+impl core::fmt::Display for Tags<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.content)
     }
@@ -176,7 +176,7 @@ pub struct Tag<'msg> {
     escaped_value: Option<&'msg str>,
 }
 
-impl<'msg> Tag<'msg> {
+impl Tag<'_> {
     /// Check if the [`Tag`] is a client only tag.
     ///
     /// Vendors can have a client only prefix denoted by `+`.
@@ -202,7 +202,7 @@ impl<'msg> Tag<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Tag<'msg> {
+impl core::fmt::Display for Tag<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let cp = if self.client_prefix {"+"} else {""};
         let (v, slash) = if let Some(vendor) = self.vendor {(vendor, "/")} else {("", "")};

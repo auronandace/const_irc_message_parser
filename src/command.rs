@@ -37,7 +37,7 @@ impl<'msg> Command<'msg> {
     /// Please file a bug report if you want to add support for a missing `Named`/`Numeric`
     /// command or the parameters required are too low.
     #[allow(clippy::too_many_lines)]
-    pub const fn parse(input: &'msg [u8], params_amount: usize) -> Result<Self, CommandError> {
+    pub const fn parse(input: &'msg [u8], params_amount: usize) -> Result<Self, CommandError<'msg>> {
         if input.is_empty() {return Err(CommandError::EmptyInput);}
         let mut number_count = 0;
         let mut index = 0;
@@ -697,7 +697,7 @@ impl<'msg> Command<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Command<'msg> {
+impl core::fmt::Display for Command<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {Self::Named(inner) | Self::Numeric(inner) => write!(f, "{inner}")}
     }

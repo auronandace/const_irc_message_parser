@@ -82,7 +82,7 @@ impl<'msg> Source<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Source<'msg> {
+impl core::fmt::Display for Source<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}{}", self.prefix, self.from)
     }
@@ -110,7 +110,7 @@ pub enum Origin<'msg> {
     Nickname(Nickname<'msg>),
 }
 
-impl<'msg> Origin<'msg> {
+impl Origin<'_> {
     /// Checks whether the [`Source`] contains non-utf8 bytes.
     #[must_use]
     pub const fn is_valid_utf8(&self) -> bool {
@@ -125,7 +125,7 @@ impl<'msg> Origin<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Origin<'msg> {
+impl core::fmt::Display for Origin<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Origin::Servername(servername) => write!(f, "{servername}"),
@@ -138,7 +138,7 @@ impl<'msg> core::fmt::Display for Origin<'msg> {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Servername<'msg>(ContentType<'msg>);
 
-impl<'msg> Servername<'msg> {
+impl Servername<'_> {
     /// Extract the server name from the [`Source`].
     #[must_use]
     pub const fn content(&self) -> ContentType {
@@ -146,7 +146,7 @@ impl<'msg> Servername<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Servername<'msg> {
+impl core::fmt::Display for Servername<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.0)
     }
@@ -162,7 +162,7 @@ pub struct Nickname<'msg> {
     host: Option<ContentType<'msg>>,
 }
 
-impl<'msg> Nickname<'msg> {
+impl Nickname<'_> {
     /// Extract the nick from the [`Source`].
     #[must_use]
     pub const fn nick(&self) -> ContentType {
@@ -190,7 +190,7 @@ impl<'msg> Nickname<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Nickname<'msg> {
+impl core::fmt::Display for Nickname<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if self.user_prefix.is_some() && self.host_prefix.is_some() {
             write!(f, "{}{}{}{}{}", self.nick, self.user_prefix.unwrap(), self.user.as_ref().unwrap(),

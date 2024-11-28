@@ -135,7 +135,7 @@ impl<'msg> Parameters<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for Parameters<'msg> {
+impl core::fmt::Display for Parameters<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.content)
     }

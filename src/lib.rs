@@ -54,7 +54,7 @@ impl<'msg> IrcMsg<'msg> {
     /// # Errors
     ///
     /// Will return `Err` if the input is empty or any of the [`IrcMsg`] components fail to parse.
-    pub const fn parse(input: &'msg[u8]) -> Result<Self, IrcMsgError> {
+    pub const fn parse(input: &'msg[u8]) -> Result<Self, IrcMsgError<'msg>> {
         if input.is_empty() {return Err(IrcMsgError::EmptyInput);}
         let (mut tags, mut tag_present, mut after_tag_end, mut tag_finished) = (None, false, 0, false);
         let (mut source, mut source_present, mut after_source_end, mut source_finished) = (None, false, 0, false);
@@ -129,7 +129,7 @@ impl<'msg> IrcMsg<'msg> {
     ///
     /// Will return `Err` if the input is empty, contains non-utf8 bytes 
     /// or any of the [`IrcMsg`] components fail to parse.
-    pub const fn parse_utf8_only(input: &'msg[u8]) -> Result<Self, IrcMsgError> {
+    pub const fn parse_utf8_only(input: &'msg[u8]) -> Result<Self, IrcMsgError<'msg>> {
         match Self::parse(input) {
             Ok(msg) => {
                 match ContentType::new(input) {
@@ -174,7 +174,7 @@ impl<'msg> IrcMsg<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for IrcMsg<'msg> {
+impl core::fmt::Display for IrcMsg<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(tags) = self.tags {write!(f, "{tags} ")?;}
         if let Some(source) = self.source {write!(f, "{source} ")?;}
@@ -253,7 +253,7 @@ impl<'msg> ContentType<'msg> {
     }
 }
 
-impl<'msg> core::fmt::Display for ContentType<'msg> {
+impl core::fmt::Display for ContentType<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::StringSlice(output) => write!(f, "{output}"),

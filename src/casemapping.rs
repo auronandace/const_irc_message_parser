@@ -31,7 +31,7 @@ impl IrcCaseMapping {
         let mut index = 0;
         while index < first.len() {
             if first[index].is_ascii_alphabetic() && second[index].is_ascii_alphabetic() {
-                if first[index].eq_ignore_ascii_case(&second[index]) {return false;}
+                if !first[index].eq_ignore_ascii_case(&second[index]) {return false;}
             } else if first[index] != second[index] {
                 match self {
                     Self::Ascii => return false,

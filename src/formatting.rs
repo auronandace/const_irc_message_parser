@@ -136,32 +136,15 @@ impl IrcFmtByte {
                                 if after.is_empty() {
                                     return Some((before, Some(fb), None, None));
                                 } else if let Some(codes) = Self::irc_colour_codes(after) {
-                                    match codes {
-                                        ColourCodeSize::SingleDigit => {
-                                            let (colours, after_code) = Self::one_colour(after, 1);
-                                            return Some((before, Some(fb), colours, after_code));
-                                        },
-                                        ColourCodeSize::DoubleDigit => {
-                                            let (colours, after_code) = Self::one_colour(after, 2);
-                                            return Some((before, Some(fb), colours, after_code));
-                                        },
-                                        ColourCodeSize::SingleAndSingle => {
-                                            let (colours, after_codes) = Self::two_colours(after, 1, 1);
-                                            return Some((before, Some(fb), colours, after_codes));
-                                        },
-                                        ColourCodeSize::SingleAndDouble => {
-                                            let (colours, after_codes) = Self::two_colours(after, 1, 2);
-                                            return Some((before, Some(fb), colours, after_codes));
-                                        },
-                                        ColourCodeSize::DoubleAndSingle => {
-                                            let (colours, after_codes) = Self::two_colours(after, 2, 1);
-                                            return Some((before, Some(fb), colours, after_codes));
-                                        },
-                                        ColourCodeSize::DoubleAndDouble => {
-                                            let (colours, after_codes) = Self::two_colours(after, 2, 2);
-                                            return Some((before, Some(fb), colours, after_codes));
-                                        },
-                                    }
+                                    let (colours, after_code) = match codes {
+                                        ColourCodeSize::SingleDigit => Self::one_colour(after, 1),
+                                        ColourCodeSize::DoubleDigit => Self::one_colour(after, 2),
+                                        ColourCodeSize::SingleAndSingle => Self::two_colours(after, 1, 1),
+                                        ColourCodeSize::SingleAndDouble => Self::two_colours(after, 1, 2),
+                                        ColourCodeSize::DoubleAndSingle => Self::two_colours(after, 2, 1),
+                                        ColourCodeSize::DoubleAndDouble => Self::two_colours(after, 2, 2),
+                                    };
+                                    return Some((before, Some(fb), colours, after_code));
                                 }
                                 return Some((before, Some(fb), None, Some(after)));
                             },

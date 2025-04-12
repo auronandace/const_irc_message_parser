@@ -24,7 +24,6 @@
 //! [alloc]: <https://doc.rust-lang.org/alloc/index.html>
 //! [const context]: <https://doc.rust-lang.org/reference/const_eval.html>
 #![no_std]
-#![allow(clippy::module_name_repetitions)]
 
 use tags::{Tags, TagsError};
 use source::{Source, SourceError};

@@ -47,25 +47,55 @@ impl<'msg> Source<'msg> {
             } else if input[index] == b'@' && user_prefix.is_some() {
                 host_prefix = Some('@');
                 user_end = index - nick_end - 2;
+            } else if input[index] == b'@' && user_prefix.is_none() {
+                host_prefix = Some('@');
+                nick_end = index - 1;
             } else if input[index] == b'.' && user_prefix.is_none() && host_prefix.is_none() {
                 probably_servername = true;
             }
             index += 1;
         }
-        if let Some((_, rest)) = input.split_first() {input = rest;}
+        if let Some((_, rest)) = input.split_first() {input = rest;} // remove starting ':'
         let from = if probably_servername {
             Origin::Servername(Servername(ContentType::new(input)))
-        } else if user_prefix.is_some() {
+        } else if user_prefix.is_some() && host_prefix.is_some() {
             let (nick, rest) = input.split_at(nick_end);
+            if nick.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
+            if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
+            if let Some(byte) = invalid_nick_byte(nick) {return Err(SourceError::InvalidNickByte(byte));}
             input = rest;
-            if let Some((_, rest)) = input.split_first() {input = rest;}
+            if let Some((_, rest)) = input.split_first() {input = rest;} // remove '!'
             let (u, rest) = input.split_at(user_end);
+            if u.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
             user = Some(ContentType::new(u));
             input = rest;
-            if let Some((_, rest)) = input.split_first() {input = rest;}
+            if let Some((_, rest)) = input.split_first() {input = rest;} // remove '@'
+            if input.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
+            host = Some(ContentType::new(input));
+            Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
+        } else if user_prefix.is_some() {
+            let (nick, rest) = input.split_at(nick_end);
+            if nick.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
+            if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
+            if let Some(byte) = invalid_nick_byte(nick) {return Err(SourceError::InvalidNickByte(byte));}
+            input = rest;
+            if let Some((_, rest)) = input.split_first() {input = rest;} // remove '!'
+            if input.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
+            user = Some(ContentType::new(input));
+            Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
+        } else if host_prefix.is_some() {
+            let (nick, rest) = input.split_at(nick_end);
+            if nick.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
+            if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
+            if let Some(byte) = invalid_nick_byte(nick) {return Err(SourceError::InvalidNickByte(byte));}
+            input = rest;
+            if let Some((_, rest)) = input.split_first() {input = rest;} // remove '@'
+            if input.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
             host = Some(ContentType::new(input));
             Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
         } else {
+            if is_invalid_nick_starting_byte(input[0]) {return Err(SourceError::InvalidNickStartingByte(input[0]));}
+            if let Some(byte) = invalid_nick_byte(input) {return Err(SourceError::InvalidNickByte(byte));}
             Origin::Nickname(Nickname{nick: ContentType::new(input), user_prefix, user, host_prefix, host})
         };
         Ok(Source{prefix, from})
@@ -94,6 +124,27 @@ const fn is_invalid_byte(input: u8) -> bool {
         0 | 10 | 13 | 32 => true,
         _ => false,
     }
+}
+
+const fn is_invalid_nick_starting_byte(input: u8) -> bool {
+    match input {
+        // dollar ('$'), colon (':')
+        36 | 58 => true,
+        _ => false,
+    }
+}
+
+const fn invalid_nick_byte(input: &[u8]) -> Option<u8> {
+    let mut index = 0;
+    while index < input.len() {
+        match input[index] {
+            // space (' '), exclamation mark ('!'), asterisk ('*'), comma (','), question mark ('?'), at ('@')
+            32 | 33 | 42 | 44 | 63 | 64 => return Some(input[index]),
+            _ => {},
+        }
+        index += 1;
+    }
+    None
 }
 
 /// Indicates where the [`IrcMsg`](crate::IrcMsg) was originally generated.
@@ -210,12 +261,16 @@ pub enum SourceError {
     InvalidStartingPrefix(u8),
     /// Use of an invalid byte when parsing [`Source`].
     InvalidByte(u8),
+    /// Use of an invalid starting byte for [`Nickname`].
+    InvalidNickStartingByte(u8),
+    /// Use of an invalid byte in the [`Nickname`].
+    InvalidNickByte(u8),
 }
 
 #[cfg(test)]
 mod const_tests {
     use crate::{const_tests::is_nick, ContentType, is_identical};
-    use super::{Origin, Nickname, Servername, Source, is_invalid_byte};
+    use super::{Origin, Nickname, Servername, Source};
     const fn is_same_content(first: ContentType, second: &str) -> bool {
         match first {
             ContentType::StringSlice(s) => is_identical(s.as_bytes(), second.as_bytes()),
@@ -223,11 +278,6 @@ mod const_tests {
         }
     }
     const fn is_same_char(first: char, second: char) -> bool {first == second}
-    #[test]
-    const fn invalid_byte_in_source() {
-        assert!(is_invalid_byte(b' '));
-        assert!(!is_invalid_byte(b'c'));
-    }
     #[test]
     const fn source_utf8() {
         let src = Source{prefix: ':', from: Origin::Servername(Servername(ContentType::StringSlice("blah")))};
@@ -245,8 +295,22 @@ mod const_tests {
     const fn parsing_source() {
         assert!(Source::parse(b":dave").is_ok());
         assert!(Source::parse(b":dave!d@david").is_ok());
+        assert!(Source::parse(b":dave!d").is_ok());
+        assert!(Source::parse(b":dave@david").is_ok());
+        assert!(Source::parse(b":d:ave").is_ok());
         assert!(Source::parse(b":example.com").is_ok());
-        assert!(Source::parse(b": dave").is_err());
+        assert!(Source::parse(b":!").is_err());      // empty nick, empty user
+        assert!(Source::parse(b":@").is_err());      // empty nick, empty host
+        assert!(Source::parse(b":!@").is_err());     // empty nick, empty user, empty host
+        assert!(Source::parse(b":dave!").is_err());  // empty user
+        assert!(Source::parse(b":dave!@").is_err()); // empty user, empty host
+        assert!(Source::parse(b":bob!d@").is_err()); // empty host
+        assert!(Source::parse(b":bob@").is_err());   // empty host
+        assert!(Source::parse(b":!dave@").is_err()); // empty nick, empty host
+        assert!(Source::parse(b":!@dave").is_err()); // empty nick, empty user
+        assert!(Source::parse(b": dave").is_err());  // space not permitted in nick
+        assert!(Source::parse(b"::dave").is_err());  // colon not permitted as starting char in nick
+        assert!(Source::parse(b":d?ve").is_err());   // question mark not permitted in nick
         let input = b":goliath!bob@david";
         let source = Source::parse(input);
         assert!(source.is_ok());

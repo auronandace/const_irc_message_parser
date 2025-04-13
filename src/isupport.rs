@@ -1,4 +1,4 @@
-//! Methods for parsing and extracting information from an [`ISupportToken`].
+//! Methods for parsing and extracting information from an [`ISupportToken`] or creating one.
 //!
 //! ## Purpose
 //!
@@ -22,7 +22,47 @@ pub struct ISupportToken<'msg> {
 }
 
 impl<'msg> ISupportToken<'msg> {
+    /// Creates an [`ISupportToken`].
+    ///
+    /// Intended to be used by servers.
+    /// 
+    /// Not currently validated against known tokens so it is possible to create invalid but correctly formed tokens.
+    /// 
+    /// To create a token with an equals but no value you need to pass in `Some("")` for `value`.
+    /// 
+    /// # Errors
+    ///
+    /// Will return `Err` if the parameter is empty, set is `false` but value is not `None`, the parameter
+    /// or the value contains an invalid byte as per the [specification].
+    /// 
+    /// [specification]: <https://modern.ircdocs.horse/#rplisupport-005>
+    pub const fn new(set: bool, parameter: &'msg str, value: Option<&'msg str>) -> Result<Self, ISupportTokenError> {
+        if parameter.is_empty() {return Err(ISupportTokenError::EmptyParameter);}
+        let (parameter, value, equals_present) = {
+            let param_bytes = parameter.as_bytes();
+            if let Some(byte) = invalid_parameter_byte(param_bytes) {
+                return Err(ISupportTokenError::InvalidParameterByte(byte));
+            }
+            if let Some(value) = value {
+                if !set {return Err(ISupportTokenError::ValueNotPermittedOnNegatedToken);}
+                if value.is_empty() {
+                    (ContentType::new(param_bytes), None, true)
+                } else {
+                    let val_bytes = value.as_bytes();
+                    if let Some(byte) = invalid_value_byte(val_bytes) {
+                        return Err(ISupportTokenError::InvalidValueByte(byte));
+                    }
+                    (ContentType::new(param_bytes), Some(ContentType::new(val_bytes)), true)
+                }
+            } else {(ContentType::new(param_bytes), None, false)}
+        };
+        Ok(ISupportToken {set, parameter, equals_present, value})
+    }
     /// Generates an [`ISupportToken`] from a slice of bytes.
+    ///
+    /// Intended to be used by clients or bots.
+    /// 
+    /// Not currently validated against known tokens so it is possible to create invalid but correctly formed tokens.
     ///
     /// # Errors
     ///
@@ -127,16 +167,36 @@ const fn is_invalid_parameter_byte(input: u8) -> bool {
     !input.is_ascii_uppercase() && !input.is_ascii_digit()
 }
 
+const fn invalid_parameter_byte(input: &[u8]) -> Option<u8> {
+    let mut index = 0;
+    while index < input.len() {
+        if is_invalid_parameter_byte(input[index]) {return Some(input[index]);}
+        index += 1;
+    }
+    None
+}
+
 const fn is_invalid_value_byte(input: u8) -> bool {
     !input.is_ascii_alphanumeric() && !matches!(input, b'!'..=b'/' | b'\x20' | b'\x5c' | b'\x3d' | b':'..=b'<' |
         b'>'..=b'@' | b'[' | b']'..=b'`' | b'{'..=b'~')
 }
 
-/// The possible types of errors when parsing a single [`ISupportToken`].
+const fn invalid_value_byte(input: &[u8]) -> Option<u8> {
+    let mut index = 0;
+    while index < input.len() {
+        if is_invalid_value_byte(input[index]) {return Some(input[index]);}
+        index += 1;
+    }
+    None
+}
+
+/// The possible types of errors when parsing or creating a single [`ISupportToken`].
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ISupportTokenError {
     /// The input is empty.
     EmptyInput,
+    /// The parameter is empty.
+    EmptyParameter,
     /// Lack of a parameter before specifying a value.
     NoParameterBeforeEquals,
     /// A token starting with `-` should never have a value.
@@ -152,13 +212,22 @@ mod const_tests {
     use crate::{ContentType, is_identical};
     use super::ISupportToken;
     #[test]
+    const fn create_token() {
+        assert!(ISupportToken::new(true, "ACCOUNTEXTBAN", Some("a")).is_ok());   // set with value
+        assert!(ISupportToken::new(true, "ACCOUNTEXTBAN", Some("")).is_ok());    // set and value is empty
+        assert!(ISupportToken::new(true, "ACCOUNTEXTBAN", None).is_ok());        // value is none
+        assert!(ISupportToken::new(true, "ACCOUNTEXtBAN", Some("a")).is_err());  // lowercase in parameter
+        assert!(ISupportToken::new(true, "ACCOUNTEXTBAN", Some("\0")).is_err()); // invalid value byte
+        assert!(ISupportToken::new(false, "ACCOUNTEXTBAN", Some("a")).is_err()); // unset with value
+        assert!(ISupportToken::new(false, "ACCOUNTEXTBAN", Some("")).is_err());  // unset and value is empty
+    }
+    #[test]
     const fn parse_token() {
-        assert!(ISupportToken::parse(b"-FNC").is_ok());
-        assert!(ISupportToken::parse(b"-FNC=").is_err());
-        assert!(ISupportToken::parse(b"-fnc").is_err());
-        assert!(ISupportToken::parse(b"ACCOUNTEXTBAN=a").is_ok());
-        assert!(ISupportToken::parse(b"ACCOUNTEXTBAN=\0a").is_err());
-        assert!(ISupportToken::parse(b"PREFIX=(ov)@+").is_ok());
+        assert!(ISupportToken::parse(b"-FNC").is_ok());               // unset
+        assert!(ISupportToken::parse(b"PREFIX=(ov)@+").is_ok());      // set with value
+        assert!(ISupportToken::parse(b"-FNC=").is_err());             // unset with equals
+        assert!(ISupportToken::parse(b"-fnc").is_err());              // invalid parameter byte (lowercase)
+        assert!(ISupportToken::parse(b"ACCOUNTEXTBAN=\0a").is_err()); // invalid value byte (null)
     }
     #[test]
     const fn parse_token_from_contenttype() {

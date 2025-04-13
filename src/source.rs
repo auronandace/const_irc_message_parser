@@ -36,21 +36,21 @@ impl<'msg> Source<'msg> {
         if input.is_empty() {return Err(SourceError::EmptyInput);}
         let prefix = if input[0] == b':' {':'} else {return Err(SourceError::InvalidStartingPrefix(input[0]))};
         let (mut nick_end, mut user_end, mut probably_servername) = (0, 0, false);
-        let (mut user_prefix, mut user, mut host_prefix, mut host) = (None, None, None, None);
+        let (mut user_prefix, mut user, mut host_prefix, mut host) = (false, None, false, None);
         let mut index = 0;
         while index < input.len() {
             if is_invalid_byte(input[index]) {
                 return Err(SourceError::InvalidByte(input[index]));
             } else if input[index] == b'!' {
-                user_prefix = Some('!');
+                user_prefix = true;
                 nick_end = index - 1;
-            } else if input[index] == b'@' && user_prefix.is_some() {
-                host_prefix = Some('@');
+            } else if input[index] == b'@' && user_prefix {
+                host_prefix = true;
                 user_end = index - nick_end - 2;
-            } else if input[index] == b'@' && user_prefix.is_none() {
-                host_prefix = Some('@');
+            } else if input[index] == b'@' && !user_prefix {
+                host_prefix = true;
                 nick_end = index - 1;
-            } else if input[index] == b'.' && user_prefix.is_none() && host_prefix.is_none() {
+            } else if input[index] == b'.' && !user_prefix && !host_prefix {
                 probably_servername = true;
             }
             index += 1;
@@ -58,7 +58,7 @@ impl<'msg> Source<'msg> {
         if let Some((_, rest)) = input.split_first() {input = rest;} // remove starting ':'
         let from = if probably_servername {
             Origin::Servername(Servername(ContentType::new(input)))
-        } else if user_prefix.is_some() && host_prefix.is_some() {
+        } else if user_prefix && host_prefix {
             let (nick, rest) = input.split_at(nick_end);
             if nick.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
             if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
@@ -72,8 +72,8 @@ impl<'msg> Source<'msg> {
             if let Some((_, rest)) = input.split_first() {input = rest;} // remove '@'
             if input.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
             host = Some(ContentType::new(input));
-            Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
-        } else if user_prefix.is_some() {
+            Origin::Nickname(Nickname{nick: ContentType::new(nick), user, host})
+        } else if user_prefix {
             let (nick, rest) = input.split_at(nick_end);
             if nick.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
             if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
@@ -82,8 +82,8 @@ impl<'msg> Source<'msg> {
             if let Some((_, rest)) = input.split_first() {input = rest;} // remove '!'
             if input.is_empty() {return Err(SourceError::InvalidNickByte(33));} // '!' parsed as user prefix
             user = Some(ContentType::new(input));
-            Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
-        } else if host_prefix.is_some() {
+            Origin::Nickname(Nickname{nick: ContentType::new(nick), user, host})
+        } else if host_prefix {
             let (nick, rest) = input.split_at(nick_end);
             if nick.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
             if is_invalid_nick_starting_byte(nick[0]) {return Err(SourceError::InvalidNickStartingByte(nick[0]));}
@@ -92,11 +92,11 @@ impl<'msg> Source<'msg> {
             if let Some((_, rest)) = input.split_first() {input = rest;} // remove '@'
             if input.is_empty() {return Err(SourceError::InvalidNickByte(64));} // '@' parsed as host prefix
             host = Some(ContentType::new(input));
-            Origin::Nickname(Nickname{nick: ContentType::new(nick), user_prefix, user, host_prefix, host})
+            Origin::Nickname(Nickname{nick: ContentType::new(nick), user, host})
         } else {
             if is_invalid_nick_starting_byte(input[0]) {return Err(SourceError::InvalidNickStartingByte(input[0]));}
             if let Some(byte) = invalid_nick_byte(input) {return Err(SourceError::InvalidNickByte(byte));}
-            Origin::Nickname(Nickname{nick: ContentType::new(input), user_prefix, user, host_prefix, host})
+            Origin::Nickname(Nickname{nick: ContentType::new(input), user, host})
         };
         Ok(Source{prefix, from})
     }
@@ -207,9 +207,7 @@ impl core::fmt::Display for Servername<'_> {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Nickname<'msg> {
     nick: ContentType<'msg>,
-    user_prefix: Option<char>,
     user: Option<ContentType<'msg>>,
-    host_prefix: Option<char>,
     host: Option<ContentType<'msg>>,
 }
 
@@ -219,20 +217,10 @@ impl Nickname<'_> {
     pub const fn nick(&self) -> ContentType {
         self.nick
     }
-    /// Extract the user prefix character `!` from the [`Source`] if it exists.
-    #[must_use]
-    pub const fn user_prefix(&self) -> Option<char> {
-        self.user_prefix
-    }
     /// Extract the user from the [`Source`] if it exists.
     #[must_use]
     pub const fn user(&self) -> Option<ContentType> {
         self.user
-    }
-    /// Extract the host prefix character `@` from the [`Source`] if it exists.
-    #[must_use]
-    pub const fn host_prefix(&self) -> Option<char> {
-        self.host_prefix
     }
     /// Extract the host from the [`Source`] if it exists.
     #[must_use]
@@ -243,9 +231,12 @@ impl Nickname<'_> {
 
 impl core::fmt::Display for Nickname<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        if self.user_prefix.is_some() && self.host_prefix.is_some() {
-            write!(f, "{}{}{}{}{}", self.nick, self.user_prefix.unwrap(), self.user.as_ref().unwrap(),
-                self.host_prefix.unwrap(), self.host.as_ref().unwrap())
+        if self.user.is_some() && self.host.is_some() {
+            write!(f, "{}!{}@{}", self.nick, self.user.as_ref().unwrap(), self.host.as_ref().unwrap())
+        } else if self.user.is_some() {
+            write!(f, "{}!{}", self.nick, self.user.as_ref().unwrap())
+        } else if self.host.is_some() {
+            write!(f, "{}@{}", self.nick, self.host.as_ref().unwrap())
         } else {
             write!(f, "{}", self.nick)
         }
@@ -277,16 +268,13 @@ mod const_tests {
             ContentType::NonUtf8ByteSlice(b) => is_identical(b, second.as_bytes()),
         }
     }
-    const fn is_same_char(first: char, second: char) -> bool {first == second}
     #[test]
     const fn source_utf8() {
         let src = Source{prefix: ':', from: Origin::Servername(Servername(ContentType::StringSlice("blah")))};
         assert!(src.from.is_valid_utf8());
         let src = Source{prefix: ':', from: Origin::Nickname(Nickname{
             nick: ContentType::StringSlice("blah"),
-            user_prefix: None,
             user: None,
-            host_prefix: None,
             host: None,
         })};
         assert!(src.from.is_valid_utf8());
@@ -318,12 +306,8 @@ mod const_tests {
             assert!(is_nick(src.from));
             if let Origin::Nickname(n) = src.from {
                 assert!(is_same_content(n.nick, "goliath"));
-                assert!(n.user_prefix.is_some());
-                if let Some(user_prefix) = n.user_prefix {assert!(is_same_char(user_prefix, '!'));}
                 assert!(n.user.is_some());
                 if let Some(user) = n.user {assert!(is_same_content(user, "bob"));}
-                assert!(n.host_prefix.is_some());
-                if let Some(host_prefix) = n.host_prefix {assert!(is_same_char(host_prefix, '@'));}
                 assert!(n.host.is_some());
                 if let Some(host) = n.host {assert!(is_same_content(host, "david"));}
             }

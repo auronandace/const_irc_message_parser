@@ -357,12 +357,8 @@ mod const_tests {
                 assert!(is_nick(src.origin()));
                 if let Origin::Nickname(n_source) = src.origin() {
                     assert!(is_identical(n_source.nick().as_bytes(), b"dan"));
-                    assert!(n_source.user_prefix().is_some());
-                    if let Some(user_prefix) = n_source.user_prefix() {assert!(user_prefix == '!');}
                     assert!(n_source.user().is_some());
                     if let Some(user) = n_source.user() {assert!(is_identical(user.as_bytes(), b"d"));}
-                    assert!(n_source.host_prefix().is_some());
-                    if let Some(host_prefix) = n_source.host_prefix() {assert!(host_prefix == '@');}
                     assert!(n_source.host().is_some());
                     if let Some(host) = n_source.host() {assert!(is_identical(host.as_bytes(), b"localhost"));}
                 }

@@ -62,15 +62,15 @@ impl<'msg> IrcMsg<'msg> {
         let mut copy = input;
         let mut index = 0;
         while index < input.len() {
-            if index == 0 && input[index] == b'@' {
+            if index == 0 && input[index] == b'@' { // starting tags first
                 tag_present = true;
-            } else if index == 0 && input[index] == b':' {
+            } else if index == 0 && input[index] == b':' { // starting source first
                 source_present = true;
-            } else if index == 0 && input[index] != b':' && input[index] != b'@' {
+            } else if index == 0 && input[index] != b':' && input[index] != b'@' { // starting command first
                 command_started = true;
-            } else if tag_finished && !command_started && !source_present && input[index] == b':' {
+            } else if tag_finished && !command_started && !source_present && input[index] == b':' { // starting source after tags parsed
                 source_present = true;
-            } else if tag_present && !tag_finished && input[index] == b' ' {
+            } else if tag_present && !tag_finished && input[index] == b' ' { // parsing tags
                 tag_finished = true;
                 after_tag_end = index + 1;
                 let (t, rest) = input.split_at(index);
@@ -79,7 +79,7 @@ impl<'msg> IrcMsg<'msg> {
                     Ok(all_tags) => tags = Some(all_tags),
                     Err(e) => return Err(IrcMsgError::Tags(e)),
                 }
-            } else if source_present && !source_finished && input[index] == b' ' {
+            } else if source_present && !source_finished && input[index] == b' ' { // parsing source
                 source_finished = true;
                 after_source_end = index + 1;
                 let (s, rest) = copy.split_at(index - after_tag_end);
@@ -89,32 +89,32 @@ impl<'msg> IrcMsg<'msg> {
                     Err(e) => return Err(IrcMsgError::Source(e)),
                 }
                 command_started = true;
-            } else if command_started && !parameters_started && input[index] == b' ' {
+            } else if command_started && !parameters_started && input[index] == b' ' { // split off command part for later parsing with or without parameters
                 parameters_started = true;
                 let (c, _) = if source_present {copy.split_at(index - after_source_end)}
                 else {copy.split_at(index - after_tag_end)};
                 copy = c;
                 after_command_end = index + 1;
-            } else if tag_finished && !source_present && !command_started {
+            } else if tag_finished && !source_present && !command_started { // starting command after tags parsed and missing source
                 command_started = true;
-            } else if parameters_started {break;}
+            } else if parameters_started {break;} // remainder of input are parameters
             index += 1;
         }
-        let command = if parameters_started {
+        let command = if parameters_started { // parse parameters first then parse command
             let (_, p) = input.split_at(after_command_end);
             match Parameters::parse(p) {
                 Ok(params) => {
                     parameters = params;
-                    if let Some(params) = params {
-                        match Command::parse(copy, params.count()) {
-                            Ok(cmd) => cmd,
-                            Err(e) => return Err(IrcMsgError::Command(e)),
-                        }
+                    if let Some(params) = params {                         // my command parser partially validates
+                        match Command::parse(copy, params.count()) {       // command based on the amount of parameters
+                            Ok(cmd) => cmd,                                // which is why we parse parameters first
+                            Err(e) => return Err(IrcMsgError::Command(e)), // TODO: parse command first then fully validate
+                        }                                                  // message after parsing parameters
                     } else {unreachable!();}
                 },
                 Err(e) => return Err(IrcMsgError::Parameters(e)),
             }
-        } else {
+        } else { // parse command without parameters
             match Command::parse(copy, 0) {
                 Ok(cmd) => cmd,
                 Err(e) => return Err(IrcMsgError::Command(e)),

@@ -19,7 +19,6 @@ use crate::ContentType;
 /// The source of an [`IrcMsg`](crate::IrcMsg).
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Source<'msg> {
-    prefix: char,
     from: Origin<'msg>,
 }
 
@@ -34,7 +33,7 @@ impl<'msg> Source<'msg> {
     /// [IRC Client Protocol Specification]: <https://modern.ircdocs.horse/#source>
     pub const fn parse(mut input: &'msg [u8]) -> Result<Self, SourceError> {
         if input.is_empty() {return Err(SourceError::EmptyInput);}
-        let prefix = if input[0] == b':' {':'} else {return Err(SourceError::InvalidStartingPrefix(input[0]))};
+        if input[0] != b':' {return Err(SourceError::InvalidStartingPrefix(input[0]))}
         let (mut nick_end, mut user_end, mut probably_servername) = (0, 0, false);
         let (mut user_prefix, mut user, mut host_prefix, mut host) = (false, None, false, None);
         let mut index = 0;
@@ -98,12 +97,7 @@ impl<'msg> Source<'msg> {
             if let Some(byte) = invalid_nick_byte(input) {return Err(SourceError::InvalidNickByte(byte));}
             Origin::Nickname(Nickname{nick: ContentType::new(input), user, host})
         };
-        Ok(Source{prefix, from})
-    }
-    /// The mandatory prefix character `:`.
-    #[must_use]
-    pub const fn prefix(&self) -> char {
-        self.prefix
+        Ok(Source{from})
     }
     /// Extract the [`Origin`] of [`Source`].
     #[must_use]
@@ -114,7 +108,7 @@ impl<'msg> Source<'msg> {
 
 impl core::fmt::Display for Source<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}{}", self.prefix, self.from)
+        write!(f, ":{}", self.from)
     }
 }
 
@@ -270,9 +264,9 @@ mod const_tests {
     }
     #[test]
     const fn source_utf8() {
-        let src = Source{prefix: ':', from: Origin::Servername(Servername(ContentType::StringSlice("blah")))};
+        let src = Source{from: Origin::Servername(Servername(ContentType::StringSlice("blah")))};
         assert!(src.from.is_valid_utf8());
-        let src = Source{prefix: ':', from: Origin::Nickname(Nickname{
+        let src = Source{from: Origin::Nickname(Nickname{
             nick: ContentType::StringSlice("blah"),
             user: None,
             host: None,

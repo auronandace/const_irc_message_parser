@@ -353,7 +353,6 @@ mod const_tests {
             }
             assert!(msg.source.is_some());
             if let Some(src) = msg.source() {
-                assert!(src.prefix() == ':');
                 assert!(is_nick(src.origin()));
                 if let Origin::Nickname(n_source) = src.origin() {
                     assert!(is_identical(n_source.nick().as_bytes(), b"dan"));
@@ -431,7 +430,6 @@ mod const_tests {
             assert!(msg.tags().is_none());
             assert!(msg.source.is_some());
             if let Some(src) = msg.source {
-                assert!(src.prefix() == ':');
                 assert!(!is_nick(src.origin()));
                 if let Origin::Servername(s_source) = src.origin() {
                     assert!(is_identical(s_source.content().as_bytes(), b"irc.example.com"));

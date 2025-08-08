@@ -117,7 +117,7 @@ impl IrcFmtByte {
     ///
     /// 4 - All bytes after the colours if present including further formatting bytes. `None` if the last byte is part of a colour or the [`IrcFmtByte`].
     #[must_use]
-    pub const fn split_at_first_fmt_byte(input: &[u8]) -> Option<(OptMsgPart, Option<Self>, OptIrcColours, OptMsgPart)> {
+    pub const fn split_at_first_fmt_byte(input: &[u8]) -> Option<(OptMsgPart<'_>, Option<Self>, OptIrcColours<'_>, OptMsgPart<'_>)> {
         if input.is_empty() {return None;} // already made sure input is not empty
         if Self::contains_irc_formatting(input) {
             let mut index = 0;
@@ -180,11 +180,11 @@ impl IrcFmtByte {
         }
         Some((Some(input), None, None, None))
     }
-    const fn one_colour(after: &[u8], index: usize) -> (OptIrcColours, OptMsgPart) {
+    const fn one_colour(after: &[u8], index: usize) -> (OptIrcColours<'_>, OptMsgPart<'_>) {
         let (code, after_code) = after.split_at(index);
         (Some((code, None)), if after_code.is_empty() {None} else {Some(after_code)})
     }
-    const fn two_colours(after: &[u8], first_split: usize, last_split: usize) -> (OptIrcColours, OptMsgPart) {
+    const fn two_colours(after: &[u8], first_split: usize, last_split: usize) -> (OptIrcColours<'_>, OptMsgPart<'_>) {
         let (foreground, comma_onwards) = after.split_at(first_split);
         let (_, after_comma) = comma_onwards.split_at(1);
         let (background, after_codes) = after_comma.split_at(last_split);

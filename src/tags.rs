@@ -79,7 +79,7 @@ impl<'msg> Tags<'msg> {
     }
     /// Returns the first [`Tag`] from all the [`Tags`].
     #[must_use]
-    pub const fn extract_first(&self) -> Tag {
+    pub const fn extract_first(&self) -> Tag<'_> {
         match self.extract_specific(0) {
             Some(tag) => tag,
             None => unreachable!(),
@@ -87,7 +87,7 @@ impl<'msg> Tags<'msg> {
     }
     /// Returns the last [`Tag`] from all the [`Tags`].
     #[must_use]
-    pub const fn extract_last(&self) -> Tag {
+    pub const fn extract_last(&self) -> Tag<'_> {
         match self.extract_specific(self.amount-1) {
             Some(tag) => tag,
             None => unreachable!(),
@@ -97,7 +97,7 @@ impl<'msg> Tags<'msg> {
     ///
     /// Index starts at 0. If out of bounds it returns `None`.
     #[must_use]
-    pub const fn extract_specific(&self, target_index: usize) -> Option<Tag> {
+    pub const fn extract_specific(&self, target_index: usize) -> Option<Tag<'_>> {
         if target_index > self.amount {return None;}
         let bytes = self.content.as_bytes();
         let mut current_tag = 0;

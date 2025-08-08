@@ -56,14 +56,14 @@ impl<'msg> Parameters<'msg> {
     ///
     /// This includes the `:` before the last parameter if present.
     #[must_use]
-    pub const fn content(&self) -> ContentType {
+    pub const fn content(&self) -> ContentType<'_> {
         self.content
     }
     /// Returns the first parameter as a [`ContentType`].
     ///
     /// Does not include `:` for the trailing parameter.
     #[must_use]
-    pub const fn extract_first(&self) -> ContentType {
+    pub const fn extract_first(&self) -> ContentType<'_> {
         match self.extract_specific(0) {
             Some(output) => output,
             None => unreachable!(),
@@ -73,7 +73,7 @@ impl<'msg> Parameters<'msg> {
     ///
     /// Does not include `:` for the trailing parameter.
     #[must_use]
-    pub const fn extract_last(&self) -> ContentType {
+    pub const fn extract_last(&self) -> ContentType<'_> {
         match self.extract_specific(self.amount-1) {
             Some(output) => output,
             None => unreachable!(),
@@ -83,7 +83,7 @@ impl<'msg> Parameters<'msg> {
     ///
     /// Index starts at 0. If out of bounds it returns `None`. Does not include `:` for the trailing parameter.
     #[must_use]
-    pub const fn extract_specific(&self, target_index: usize) -> Option<ContentType> {
+    pub const fn extract_specific(&self, target_index: usize) -> Option<ContentType<'_>> {
         if target_index > self.amount {return None;}
         let bytes = self.content.as_bytes();
         let mut current_param = 1;

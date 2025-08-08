@@ -139,12 +139,12 @@ impl<'msg> ISupportToken<'msg> {
     }
     /// Returns the parameter of the [`ISupportToken`] as a [`ContentType`].
     #[must_use]
-    pub const fn parameter(&self) -> ContentType {
+    pub const fn parameter(&self) -> ContentType<'_> {
         self.parameter
     }
     /// Returns the value of the [`ISupportToken`] as a [`ContentType`] if it exists.
     #[must_use]
-    pub const fn value(&self) -> Option<ContentType> {
+    pub const fn value(&self) -> Option<ContentType<'_>> {
         self.value
     }
     /// Check whether the [`ISupportToken`] is set.

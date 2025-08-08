@@ -141,22 +141,22 @@ impl<'msg> IrcMsg<'msg> {
     }
     /// Extract the [`Tags`] from an [`IrcMsg`] if they exist.
     #[must_use]
-    pub const fn tags(&self) -> Option<Tags> {
+    pub const fn tags(&self) -> Option<Tags<'_>> {
         self.tags
     }
     /// Extract the [`Source`] from an [`IrcMsg`] if it exists.
     #[must_use]
-    pub const fn source(&self) -> Option<Source> {
+    pub const fn source(&self) -> Option<Source<'_>> {
         self.source
     }
     /// Extract the [`Command`] from an [`IrcMsg`].
     #[must_use]
-    pub const fn command(&self) -> Command {
+    pub const fn command(&self) -> Command<'_> {
         self.command
     }
     /// Extract the [`Parameters`] from an [`IrcMsg`] if they exist.
     #[must_use]
-    pub const fn parameters(&self) -> Option<Parameters> {
+    pub const fn parameters(&self) -> Option<Parameters<'_>> {
         self.parameters
     }
     /// Strips the [`Tags`] from an [`IrcMsg`].

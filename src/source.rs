@@ -101,7 +101,7 @@ impl<'msg> Source<'msg> {
     }
     /// Extract the [`Origin`] of [`Source`].
     #[must_use]
-    pub const fn origin(&self) -> Origin {
+    pub const fn origin(&self) -> Origin<'_> {
         self.from
     }
 }
@@ -186,7 +186,7 @@ pub struct Servername<'msg>(ContentType<'msg>);
 impl Servername<'_> {
     /// Extract the server name from the [`Source`].
     #[must_use]
-    pub const fn content(&self) -> ContentType {
+    pub const fn content(&self) -> ContentType<'_> {
         self.0
     }
 }
@@ -208,17 +208,17 @@ pub struct Nickname<'msg> {
 impl Nickname<'_> {
     /// Extract the nick from the [`Source`].
     #[must_use]
-    pub const fn nick(&self) -> ContentType {
+    pub const fn nick(&self) -> ContentType<'_> {
         self.nick
     }
     /// Extract the user from the [`Source`] if it exists.
     #[must_use]
-    pub const fn user(&self) -> Option<ContentType> {
+    pub const fn user(&self) -> Option<ContentType<'_>> {
         self.user
     }
     /// Extract the host from the [`Source`] if it exists.
     #[must_use]
-    pub const fn host(&self) -> Option<ContentType> {
+    pub const fn host(&self) -> Option<ContentType<'_>> {
         self.host
     }
 }

@@ -225,14 +225,11 @@ impl Nickname<'_> {
 
 impl core::fmt::Display for Nickname<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        if self.user.is_some() && self.host.is_some() {
-            write!(f, "{}!{}@{}", self.nick, self.user.as_ref().unwrap(), self.host.as_ref().unwrap())
-        } else if self.user.is_some() {
-            write!(f, "{}!{}", self.nick, self.user.as_ref().unwrap())
-        } else if self.host.is_some() {
-            write!(f, "{}@{}", self.nick, self.host.as_ref().unwrap())
-        } else {
-            write!(f, "{}", self.nick)
+        match (self.user, self.host) {
+            (Some(user), Some(host)) => write!(f, "{}!{user}@{host}", self.nick),
+            (Some(user), None) => write!(f, "{}!{user}", self.nick),
+            (None, Some(host)) => write!(f, "{}@{host}", self.nick),
+            (None, None) => write!(f, "{}", self.nick),
         }
     }
 }

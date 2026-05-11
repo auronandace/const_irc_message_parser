@@ -113,7 +113,7 @@ impl<'msg> Parameters<'msg> {
         let param = if last_param {
             rest
         } else {
-            let (p, _) = rest.split_at(if self.amount == 1 {param_end+1} else {param_end});
+            let (p, _) = rest.split_at(if self.amount == target_index+1 {param_end+1} else {param_end});
             p
         };
         if param[0] == b':' {
@@ -206,6 +206,33 @@ mod const_tests {
             let last = last_param.as_bytes();
             assert!(is_identical(last, b"multi-prefix sasl"));
             assert!(last.len() == 17);
+        }
+        let out_of_bounds_param = params.extract_specific(9);
+        assert!(out_of_bounds_param.is_none());
+    }
+    #[test]
+    const fn get_specific_no_prefix() {
+        let params = Parameters{amount: 3, content: ContentType::new(b"#chan +nto nick")};
+        let first_param = params.extract_specific(0);
+        assert!(first_param.is_some());
+        if let Some(first_param) = first_param {
+            let first = first_param.as_bytes();
+            assert!(is_identical(first, b"#chan"));
+            assert!(first.len() == 5);
+        }
+        let second_param = params.extract_specific(1);
+        assert!(second_param.is_some());
+        if let Some(second_param) = second_param {
+            let second = second_param.as_bytes();
+            assert!(is_identical(second, b"+nto"));
+            assert!(second.len() == 4);
+        }
+        let last_param = params.extract_specific(2);
+        assert!(last_param.is_some());
+        if let Some(last_param) = last_param {
+            let last = last_param.as_bytes();
+            assert!(is_identical(last, b"nick"));
+            assert!(last.len() == 4);
         }
         let out_of_bounds_param = params.extract_specific(9);
         assert!(out_of_bounds_param.is_none());
